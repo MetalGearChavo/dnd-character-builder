@@ -152,6 +152,35 @@ describe('privilegi delle classi base D&D in italiano', () => {
   })
 })
 
+describe('privilegi delle classi base D&D in spagnolo', () => {
+  it('copre ogni privilegio di classe base', async () => {
+    const { dnd5eFeatureDescriptionsEs } = await import('./dnd5e/classes-es')
+    const { classes } = await import('./dnd5e/classes')
+    for (const c of classes) {
+      for (const f of c.features) {
+        expect(dnd5eFeatureDescriptionsEs[f.id], `manca ${c.id}/${f.id}`).toBeDefined()
+      }
+    }
+  })
+
+  it('non traduce id che non esistono fra i privilegi di classe base', async () => {
+    const { dnd5eFeatureDescriptionsEs } = await import('./dnd5e/classes-es')
+    const { classes } = await import('./dnd5e/classes')
+    const ids = new Set(classes.flatMap(c => c.features.map(f => f.id)))
+    for (const id of Object.keys(dnd5eFeatureDescriptionsEs)) expect(ids, id).toContain(id)
+  })
+
+  it('descrive le regole 2014, non quelle 2024', async () => {
+    const { dnd5eFeatureDescriptionsEs: d } = await import('./dnd5e/classes-es')
+    // El monje 2014 tiene puntos de ki, no los Puntos de Concentración del 2024
+    expect(d['ki']).toMatch(/puntos de ki/)
+    // El bárbaro 2014 tiene Crítico brutal, no Golpe brutal
+    expect(d['brutal-critical-1']).toMatch(/golpe crítico/)
+    // El paladín 2014 gasta espacios para el Castigo divino, que en 2024 es un conjuro
+    expect(d['divine-smite']).toMatch(/espacio de conjuro/)
+  })
+})
+
 describe('un solo nome italiano per privilegio', () => {
   it('i file di traduzione non ridefiniscono i nomi che stanno in gameTerms', async () => {
     // Il difetto che questo test previene: la lista dei privilegi mostrava un

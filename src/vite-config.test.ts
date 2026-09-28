@@ -42,6 +42,7 @@ describe('precache del service worker', () => {
     expect(patterns).toContain('assets/favicon-*.svg')
     expect(patterns).toContain('assets/game-dnd5e-spells-it-*.js')
     expect(patterns).toContain('assets/game-dnd24-spells-it-*.js')
+    expect(patterns).toContain('assets/game-dnd5e-spells-es-*.js')
   })
 
   // Una versione nuova deve arrivare a chi ha gia' aperto l'app. Con
@@ -73,9 +74,9 @@ describe('precache del service worker', () => {
   // ma non a tutti»: 625 KB non compressi che riguardano solo chi gioca in
   // italiano. Fuori dal precache, ma dentro runtimeCaching — senza la seconda
   // metà l'esclusione sarebbe una regressione offline, non un risparmio.
-  it('il testo italiano degli incantesimi ha una regola di runtime caching', () => {
+  it('il testo italiano e spagnolo degli incantesimi ha una regola di runtime caching', () => {
     expect(viteConfig).toMatch(/cacheName:\s*'spell-text-it'/)
-    expect(viteConfig).toMatch(/game-dnd\(\?:5e\|24\)-spells-it/)
+    expect(viteConfig).toMatch(/game-dnd\(\?:5e\|24\)-spells-\(\?:it\|es\)/)
   })
 
   // Le due facce corsive esistono ancora sul disco: l'esclusione ha senso solo
@@ -119,8 +120,9 @@ describe('precache del service worker', () => {
       expect(precache.filter((u) => /^assets\/favicon-.*\.svg$/.test(u))).toHaveLength(0)
     })
 
-    it('non precarica il testo italiano degli incantesimi', () => {
+    it('non precarica il testo italiano e spagnolo degli incantesimi', () => {
       expect(precache.filter((u) => u.includes('spells-it'))).toHaveLength(0)
+      expect(precache.filter((u) => u.includes('spells-es'))).toHaveLength(0)
     })
 
     // Guardia contro l'eccesso opposto: escludere troppo rompe l'offline.

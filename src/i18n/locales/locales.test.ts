@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import itJson from './it.json'
 import enJson from './en.json'
+import esJson from './es.json'
 
 type Tree = { [k: string]: unknown }
 
@@ -23,11 +24,12 @@ function flatten(node: Tree, prefix = ''): string[] {
 
 const it_ = flatten(itJson as unknown as Tree)
 const en_ = flatten(enJson as unknown as Tree)
+const es_ = flatten(esJson as unknown as Tree)
 
 describe('file di lingua', () => {
   it('sono JSON validi', () => {
     // Rileggerli dal disco: l'import di Vite normalizza, il parse no.
-    for (const file of ['it.json', 'en.json']) {
+    for (const file of ['it.json', 'en.json', 'es.json']) {
       const raw = readFileSync(resolve(__dirname, file), 'utf8')
       expect(() => JSON.parse(raw), file).not.toThrow()
     }
@@ -39,6 +41,9 @@ describe('file di lingua', () => {
     expect(en_.filter(k => !it_.includes(k))).toEqual([])
     expect(it_.filter(k => !en_.includes(k))).toEqual([])
     expect(it_.length).toBe(en_.length)
+    expect(es_.filter(k => !en_.includes(k))).toEqual([])
+    expect(en_.filter(k => !es_.includes(k))).toEqual([])
+    expect(es_.length).toBe(en_.length)
   })
 
   it('non lasciano stringhe vuote', () => {
@@ -49,6 +54,7 @@ describe('file di lingua', () => {
       })
     expect(empty(itJson as unknown as Tree, it_)).toEqual([])
     expect(empty(enJson as unknown as Tree, en_)).toEqual([])
+    expect(empty(esJson as unknown as Tree, es_)).toEqual([])
   })
 
   it('ha una promo per ognuna delle quattro varianti', () => {
@@ -57,6 +63,7 @@ describe('file di lingua', () => {
     for (const variant of ['dnd5e', 'dnd2024', 'brancalonia', 'apocalisse']) {
       expect(it_, `it ${variant}`).toContain(`variant.${variant}Promo`)
       expect(en_, `en ${variant}`).toContain(`variant.${variant}Promo`)
+      expect(es_, `es ${variant}`).toContain(`variant.${variant}Promo`)
     }
   })
 
@@ -71,6 +78,7 @@ describe('file di lingua', () => {
     ]) {
       expect(it_, `it ${key}`).toContain(key)
       expect(en_, `en ${key}`).toContain(key)
+      expect(es_, `es ${key}`).toContain(key)
     }
   })
 
@@ -86,5 +94,13 @@ describe('file di lingua', () => {
       return placeholders(a).join('|') !== placeholders(b).join('|')
     })
     expect(mismatched).toEqual([])
+
+    const mismatchedEs = es_.filter(k => {
+      const a = read(esJson as unknown as Tree, k)
+      const b = read(enJson as unknown as Tree, k)
+      if (typeof a !== 'string' || typeof b !== 'string') return false
+      return placeholders(a).join('|') !== placeholders(b).join('|')
+    })
+    expect(mismatchedEs).toEqual([])
   })
 })

@@ -96,6 +96,7 @@ export default defineConfig({
           'assets/favicon-*.svg',
           'assets/game-dnd5e-spells-it-*.js',
           'assets/game-dnd24-spells-it-*.js',
+          'assets/game-dnd5e-spells-es-*.js',
         ],
         runtimeCaching: [
           {
@@ -110,7 +111,7 @@ export default defineConfig({
             // Il nome del file porta l'hash del build: una voce per edizione
             // per build, e maxEntries tiene solo le ultime quattro invece di
             // accumulare una copia per ogni versione mai visitata.
-            urlPattern: /\/assets\/game-dnd(?:5e|24)-spells-it-[^/]+\.js$/,
+            urlPattern: /\/assets\/game-dnd(?:5e|24)-spells-(?:it|es)-[^/]+\.js$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'spell-text-it',
@@ -142,6 +143,10 @@ export default defineConfig({
           // italiano, solo nel passo incantesimi, solo per la sua variante.
           'game-dnd5e-spells-it': ['./src/data/dnd5e/spells-it.ts'],
           'game-dnd24-spells-it': ['./src/data/dnd2024/spells-it.ts'],
+          // Lo spagnolo copre solo dnd5e per ora: dnd2024 ricade sull'inglese
+          // finché non esiste una traduzione (stesso meccanismo di Brancalonia
+          // e Apocalisse per le combinazioni che non coprono).
+          'game-dnd5e-spells-es': ['./src/data/dnd5e/spells-es.ts'],
           'game-dnd5e-equipment': ['./src/data/dnd5e/equipment.ts'],
           'game-dnd5e-rules': ['./src/data/dnd5e/rules.ts'],
           'game-branca-races': ['./src/data/brancalonia/races.ts'],

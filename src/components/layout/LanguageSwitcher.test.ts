@@ -9,6 +9,7 @@ vi.mock('@/i18n', () => ({ loadLocale: (code: string) => loadLocale(code) }))
 const messages = {
   it: { common: { changeLanguage: 'Cambia lingua', availableLanguages: 'Lingue disponibili' } },
   en: { common: { changeLanguage: 'Change language', availableLanguages: 'Available languages' } },
+  es: { common: { changeLanguage: 'Cambiar idioma', availableLanguages: 'Idiomas disponibles' } },
 }
 
 function mountSwitcher(locale = 'it') {
@@ -50,11 +51,12 @@ describe('selettore di lingua', () => {
     await wrapper.vm.$nextTick()
 
     const options = wrapper.findAll('[role="option"]')
-    expect(options).toHaveLength(2)
-    // 'en' è la seconda voce: il menu si apre già posizionato lì.
+    expect(options).toHaveLength(3)
+    // 'en' è la seconda voce (it, en, es): il menu si apre già posizionato lì.
     expect(document.activeElement).toBe(options[1]!.element)
     expect(options[1]!.attributes('tabindex')).toBe('0')
     expect(options[0]!.attributes('tabindex')).toBe('-1')
+    expect(options[2]!.attributes('tabindex')).toBe('-1')
   })
 
   it('con la freccia su apre partendo dall’ultima voce', async () => {
@@ -62,7 +64,8 @@ describe('selettore di lingua', () => {
     await wrapper.get('button').trigger('keydown', { key: 'ArrowUp' })
     await wrapper.vm.$nextTick()
     const options = wrapper.findAll('[role="option"]')
-    expect(document.activeElement).toBe(options[1]!.element)
+    // 'es' è l'ultima voce (it, en, es).
+    expect(document.activeElement).toBe(options[2]!.element)
   })
 
   it('sposta il fuoco con le frecce e gira in tondo', async () => {
@@ -78,11 +81,15 @@ describe('selettore di lingua', () => {
 
     await menu.trigger('keydown', { key: 'ArrowDown' })
     await wrapper.vm.$nextTick()
+    expect(document.activeElement).toBe(options[2]!.element)
+
+    await menu.trigger('keydown', { key: 'ArrowDown' })
+    await wrapper.vm.$nextTick()
     expect(document.activeElement).toBe(options[0]!.element)
 
     await menu.trigger('keydown', { key: 'ArrowUp' })
     await wrapper.vm.$nextTick()
-    expect(document.activeElement).toBe(options[1]!.element)
+    expect(document.activeElement).toBe(options[2]!.element)
 
     await menu.trigger('keydown', { key: 'Home' })
     await wrapper.vm.$nextTick()
@@ -90,7 +97,7 @@ describe('selettore di lingua', () => {
 
     await menu.trigger('keydown', { key: 'End' })
     await wrapper.vm.$nextTick()
-    expect(document.activeElement).toBe(options[1]!.element)
+    expect(document.activeElement).toBe(options[2]!.element)
   })
 
   it('sceglie la lingua con Invio e riporta il fuoco sul pulsante', async () => {
@@ -117,7 +124,8 @@ describe('selettore di lingua', () => {
     await wrapper.vm.$nextTick()
     await wrapper.get('[role="listbox"]').trigger('keydown', { key: ' ' })
     await new Promise(r => setTimeout(r, 0))
-    expect(loadLocale).toHaveBeenCalledWith('en')
+    // 'End' porta all'ultima voce, ora 'es'.
+    expect(loadLocale).toHaveBeenCalledWith('es')
   })
 
   it('Esc chiude il menu e rimette il fuoco sul pulsante', async () => {
@@ -151,6 +159,15 @@ describe('selettore di lingua', () => {
     const options = wrapper.findAll('[role="option"]')
     expect(options[0]!.attributes('aria-selected')).toBe('false')
     expect(options[1]!.attributes('aria-selected')).toBe('true')
+    expect(options[2]!.attributes('aria-selected')).toBe('false')
+  })
+
+  it('espone lo spagnolo come terza opzione, con bandiera ES', async () => {
+    wrapper = mountSwitcher('it')
+    await wrapper.get('button').trigger('click')
+    const options = wrapper.findAll('[role="option"]')
+    expect(options[2]!.text()).toContain('ES')
+    expect(options[2]!.text()).toContain('Español')
   })
 
   it('etichetta pulsante e menu con le stringhe tradotte, non scritte a mano', async () => {

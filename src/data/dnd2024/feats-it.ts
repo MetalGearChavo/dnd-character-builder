@@ -20,6 +20,8 @@
 // (featureNamesIt), insieme ai nomi dei privilegi: è un'unica mappa per tutta
 // l'app, così il riepilogo e la scheda PDF non possono divergere.
 
+import { dnd2024FeatDescriptionsEs } from './feats-es'
+
 export const dnd2024FeatDescriptionsIt: Record<string, string> = {
   // ═══ Talenti Origini ═══════════════════════════════════════════════
   'alert':
@@ -72,6 +74,7 @@ export const dnd2024FeatDescriptionsIt: Record<string, string> = {
  * perché la scheda non accosti due lingue nella stessa schermata.
  */
 export function getDnd2024FeatDescription(featId: string, locale: string, fallback: string): string {
+  if (locale === 'es') return dnd2024FeatDescriptionsEs[featId] ?? fallback
   if (locale !== 'it') return fallback
   return dnd2024FeatDescriptionsIt[featId] ?? fallback
 }

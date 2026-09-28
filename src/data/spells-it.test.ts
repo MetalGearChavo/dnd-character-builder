@@ -3,7 +3,7 @@ import { spells } from './dnd5e/spells'
 import { toDnd2024Spells } from './dnd2024/spells'
 import { dnd5eSpellTextsIt } from './dnd5e/spells-it'
 import { dnd2024SpellTextsIt } from './dnd2024/spells-it'
-import { ensureSpellTextsIt, getSpellTextIt, spellTextEdition, spellTextsItLoaded } from './spells-it'
+import { ensureSpellTexts, getSpellText, spellTextEdition, spellTextsLoaded } from './spells-it'
 import type { SpellTextIt } from './spells-it'
 import { spellNamesIt } from '@/i18n/gameTerms'
 
@@ -122,37 +122,55 @@ describe('caricamento su richiesta', () => {
     expect(spellTextEdition('dnd2024')).toBe('2024')
   })
 
-  it('serve il testo solo dopo ensureSpellTextsIt', async () => {
+  it('serve il testo solo dopo ensureSpellTexts', async () => {
     // Lo stato è di modulo: qui si verifica che il getter non esploda prima
     // del caricamento — deve tornare undefined, cioè «usa la descrizione
     // inglese», non lanciare.
-    expect(() => getSpellTextIt('dnd5e', '3-fireball')).not.toThrow()
-    await ensureSpellTextsIt('dnd5e')
-    expect(spellTextsItLoaded('dnd5e')).toBe(true)
-    const palla = getSpellTextIt('dnd5e', '3-fireball')
+    expect(() => getSpellText('dnd5e', 'it', '3-fireball')).not.toThrow()
+    await ensureSpellTexts('dnd5e', 'it')
+    expect(spellTextsLoaded('dnd5e', 'it')).toBe(true)
+    const palla = getSpellText('dnd5e', 'it', '3-fireball')
     expect(palla?.testo).toContain('scia di luce brillante')
     expect(palla?.aLivelliSuperiori).toContain('4° livello')
   })
 
   it('non ha testo per i due fuori SRD, né per gli id inventati', async () => {
-    await ensureSpellTextsIt('dnd5e')
-    for (const id of FUORI_SRD_2014) expect(getSpellTextIt('dnd5e', id)).toBeUndefined()
-    expect(getSpellTextIt('dnd5e', 'incantesimo-che-non-esiste')).toBeUndefined()
+    await ensureSpellTexts('dnd5e', 'it')
+    for (const id of FUORI_SRD_2014) expect(getSpellText('dnd5e', 'it', id)).toBeUndefined()
+    expect(getSpellText('dnd5e', 'it', 'incantesimo-che-non-esiste')).toBeUndefined()
   })
 
-  it('il 2024 ha il suo testo, diverso da quello del 2014', async () => {
-    await ensureSpellTextsIt('dnd2024')
-    const a = getSpellTextIt('dnd5e', '3-fireball')
-    const b = getSpellTextIt('dnd2024', '3-fireball')
+  it('il 2024 ha il suo testo italiano, diverso da quello del 2014', async () => {
+    await ensureSpellTexts('dnd2024', 'it')
+    const a = getSpellText('dnd5e', 'it', '3-fireball')
+    const b = getSpellText('dnd2024', 'it', '3-fireball')
     expect(b?.testo).toBeTruthy()
     expect(b?.testo).not.toBe(a?.testo)
   })
 
   it('la seconda chiamata non ricarica nulla', async () => {
-    const uno = ensureSpellTextsIt('dnd5e')
-    const due = ensureSpellTextsIt('dnd5e')
+    const uno = ensureSpellTexts('dnd5e', 'it')
+    const due = ensureSpellTexts('dnd5e', 'it')
     await Promise.all([uno, due])
-    expect(spellTextsItLoaded('dnd5e')).toBe(true)
+    expect(spellTextsLoaded('dnd5e', 'it')).toBe(true)
+  })
+
+  it('lo spagnolo copre solo il 2014: sul 2024 ricade sull\'inglese senza scaricare nulla', async () => {
+    await ensureSpellTexts('dnd5e', 'es')
+    expect(spellTextsLoaded('dnd5e', 'es')).toBe(true)
+    const bola = getSpellText('dnd5e', 'es', '3-fireball')
+    expect(bola?.testo).toContain('rastro de luz brillante')
+    expect(bola?.aLivelliSuperiori).toContain('espacio de conjuro de nivel 4')
+
+    await ensureSpellTexts('dnd2024', 'es')
+    expect(spellTextsLoaded('dnd2024', 'es')).toBe(false)
+    expect(getSpellText('dnd2024', 'es', '3-fireball')).toBeUndefined()
+  })
+
+  it('una lingua senza copertura (inglese) non tenta mai un import', async () => {
+    await ensureSpellTexts('dnd5e', 'en')
+    expect(spellTextsLoaded('dnd5e', 'en')).toBe(false)
+    expect(getSpellText('dnd5e', 'en', '3-fireball')).toBeUndefined()
   })
 })
 

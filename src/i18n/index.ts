@@ -1,12 +1,23 @@
 // WSG 3.8: Lazy-load non-active locale — only import the detected language on startup
 import { createI18n } from 'vue-i18n'
 
-const detectedLocale = navigator.language.startsWith('it') ? 'it' : 'en'
+function detectLocale(): string {
+  const nav = navigator.language
+  if (nav.startsWith('it')) return 'it'
+  if (nav.startsWith('es')) return 'es'
+  return 'en'
+}
+
+const localeLoaders: Record<string, () => Promise<Record<string, unknown>>> = {
+  it: () => import('./locales/it.json').then(m => m.default),
+  es: () => import('./locales/es.json').then(m => m.default),
+  en: () => import('./locales/en.json').then(m => m.default),
+}
+
+const detectedLocale = detectLocale()
 
 // Start loading the active locale immediately (non-blocking)
-const activeMessagesPromise = detectedLocale === 'it'
-  ? import('./locales/it.json').then(m => m.default)
-  : import('./locales/en.json').then(m => m.default)
+const activeMessagesPromise = localeLoaders[detectedLocale]!()
 
 // Create i18n with empty messages — populated before app mount via initI18n()
 const i18n = createI18n({
@@ -36,9 +47,8 @@ export async function initI18n(): Promise<void> {
  */
 export async function loadLocale(locale: string): Promise<void> {
   if (i18n.global.availableLocales.includes(locale)) return
-  const messages = locale === 'it'
-    ? (await import('./locales/it.json')).default
-    : (await import('./locales/en.json')).default
+  const loader = localeLoaders[locale] ?? localeLoaders.en!
+  const messages = await loader()
   i18n.global.setLocaleMessage(locale, messages)
 }
 

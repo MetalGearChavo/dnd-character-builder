@@ -248,3 +248,40 @@ describe('nomi dei talenti di D&D 2024', () => {
     expect(t('Boon of Truesight')).toBe('Dono della vista pura')
   })
 })
+
+/**
+ * Copertura spagnola: una voce per famiglia di categoria, più il ripiego
+ * sull'inglese per un nome che nessuna mappa *Es conosce.
+ */
+describe('nomi di gioco in spagnolo', () => {
+  it('traduce un nome per ogni famiglia di categoria', () => {
+    expect(translateGameTerm('Longsword', 'es', 'weapon')).toBe('Espada larga')
+    expect(translateGameTerm('Plate', 'es', 'armor')).toBe('Armadura de placas')
+    expect(translateGameTerm('Fireball', 'es', 'spell')).toBe('Bola de fuego')
+    expect(translateGameTerm('Evocation', 'es', 'school')).toBe('Evocación')
+    expect(translateGameTerm('fire', 'es', 'damageType')).toBe('fuego')
+    expect(translateGameTerm("Explorer's Pack", 'es', 'pack')).toBe('Equipo de explorador')
+    expect(translateGameTerm('Acolyte', 'es', 'background')).toBe('Acólito')
+    expect(translateGameTerm('Wizard', 'es', 'class')).toBe('Mago')
+    expect(translateGameTerm('Elf', 'es', 'race')).toBe('Elfo')
+    expect(translateGameTerm('High Elf', 'es', 'subrace')).toBe('Alto elfo')
+    expect(translateGameTerm('Stealth', 'es', 'skill')).toBe('Sigilo')
+    expect(translateGameTerm('martial', 'es', 'proficiency')).toBe('Armas Marciales')
+    expect(translateGameTerm('Rage', 'es', 'feature')).toBe('Ira')
+    expect(translateGameTerm('darkvision', 'es', 'trait')).toBe('Visión en la oscuridad')
+    expect(translateGameTerm('Common', 'es', 'language')).toBe('Común')
+    expect(translateGameTerm('berserker', 'es', 'subclass')).toBe('Berserker')
+    expect(translateGameTerm('Dagger', 'es', 'equipment')).toBe('Daga')
+    expect(translateGameTerm('Small', 'es', 'size')).toBe('Pequeña')
+    expect(translateGameTerm('cn', 'es', 'alignment')).toBe('Caótico Neutral')
+  })
+
+  it('ricade sul nome inglese quando la mappa spagnola non ha la voce', () => {
+    expect(translateGameTerm('Not A Real Spell', 'es', 'spell')).toBe('Not A Real Spell')
+    expect(translateGameTerm('Not A Real Feature', 'es', 'feature')).toBe('Not A Real Feature')
+  })
+
+  it('le classi di Brancalonia in spagnolo ricadono sul nome D&D di base, non su quello italiano', () => {
+    expect(translateGameTerm('barbarian', 'es', 'class', 'brancalonia')).toBe('Bárbaro')
+  })
+})

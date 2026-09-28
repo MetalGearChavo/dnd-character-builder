@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { dnd2024Classes } from './classes'
 import { dnd2024FeatureDescriptionsIt } from './classes-it'
+import { dnd2024FeatureDescriptionsEs } from './classes-es'
 import { getFeatureDescription, preloadVariantData } from '../index'
 
 /** Tutti gli id dei privilegi della variante 2024, classi e sottoclassi. */
@@ -78,5 +79,45 @@ describe('getFeatureDescription per la variante 2024', () => {
     expect(testo).toBe(dnd2024FeatureDescriptionsIt['primal-champion'])
     // Nel 2024 il massimo è 25, nel 2014 era 24.
     expect(testo).toContain('25')
+  })
+})
+
+describe('descripciones en español de los privilegios de D&D 2024', () => {
+  it('cubre cada privilegio de clase y de subclase', () => {
+    const faltantes = allFeatureIds().filter(id => !(id in dnd2024FeatureDescriptionsEs))
+    expect(faltantes).toEqual([])
+  })
+
+  it('no contiene id que no existan en los datos', () => {
+    const conocidos = new Set(allFeatureIds())
+    const huerfanos = Object.keys(dnd2024FeatureDescriptionsEs).filter(id => !conocidos.has(id))
+    expect(huerfanos).toEqual([])
+  })
+})
+
+describe('getFeatureDescription para la variante 2024 en español', () => {
+  it('devuelve el español y no el fallback inglés', async () => {
+    await preloadVariantData('dnd2024')
+    for (const id of ['rage', 'weapon-mastery', 'monk-s-focus', 'cutting-words', 'overchannel']) {
+      const testo = getFeatureDescription('dnd2024', id, 'es', 'FALLBACK')
+      expect(testo).not.toBe('FALLBACK')
+      expect(testo).toBe(dnd2024FeatureDescriptionsEs[id])
+    }
+  })
+
+  it('no recurre a las descripciones 2014 para los id homónimos', async () => {
+    await preloadVariantData('dnd2024')
+    await preloadVariantData('dnd5e')
+    const testo = getFeatureDescription('dnd2024', 'primal-champion', 'es', 'FALLBACK')
+    expect(testo).toBe(dnd2024FeatureDescriptionsEs['primal-champion'])
+    // En 2024 el máximo es 25, en 2014 era 24.
+    expect(testo).toContain('25')
+  })
+
+  it('cae al inglés en Brancalonia y Apocalisse, que no tienen mapa en español', async () => {
+    await preloadVariantData('brancalonia')
+    expect(getFeatureDescription('brancalonia', 'rage', 'es', 'FALLBACK')).toBe('FALLBACK')
+    await preloadVariantData('apocalisse')
+    expect(getFeatureDescription('apocalisse', 'rage', 'es', 'FALLBACK')).toBe('FALLBACK')
   })
 })

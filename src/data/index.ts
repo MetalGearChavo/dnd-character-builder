@@ -79,6 +79,7 @@ let _apoRaces: readonly Race[] | null = null
 let _apoTraitDescriptions: { en: Record<string, string>; it: Record<string, string> } | null = null
 let _apoFeatureIt: { desc: Record<string, string>; names: Record<string, string> } | null = null
 let _dnd5eFeatureIt: { desc: Record<string, string>; names: Record<string, string> } | null = null
+let _dnd5eFeatureEs: { desc: Record<string, string>; names: Record<string, string> } | null = null
 
 // ─── D&D 2024 (SRD 5.2.1) ───────────────────────────────────────────────
 let _dnd24Species: readonly Race[] | null = null
@@ -88,6 +89,8 @@ let _dnd24Spells: readonly Spell[] | null = null
 // Descrizioni italiane dei privilegi 2024: viaggiano nel chunk della variante,
 // come per le altre, così chi non apre il 2024 non le scarica (WSG 3.8).
 let _dnd24FeatureIt: Record<string, string> | null = null
+// Descripciones en español de los privilegios 2024: mismo criterio que _dnd24FeatureIt.
+let _dnd24FeatureEs: Record<string, string> | null = null
 // Le condizioni del 2024 sono un testo diverso, non una revisione di quello
 // del 2014: viaggiano in un modulo loro e non ricadono mai sull'altra edizione.
 let _dnd24Conditions: readonly Condition[] | null = null
@@ -108,14 +111,15 @@ function ensureDnd2024(): Promise<void> {
   // `_toDnd24Spells` fa parte della condizione: senza di lui getSpells('dnd2024')
   // ricade sulla lista 2014, ed è esattamente quello che succedeva alla seconda
   // visita, quando i dati arrivavano dalla cache.
-  if (_dnd24Species && _dnd24Classes && _dnd24Backgrounds && _dnd24FeatureIt && _toDnd24Spells
+  if (_dnd24Species && _dnd24Classes && _dnd24Backgrounds && _dnd24FeatureIt && _dnd24FeatureEs && _toDnd24Spells
     && _dnd24HalfCasterSlots && _dnd24MulticlassSpellSlots && _dnd24Prepared) return Promise.resolve()
   if (_pDnd24) return _pDnd24
   const cs = lsGet<Race[]>('dnd24-species')
   const cc = lsGet<CharacterClass[]>('dnd24-classes')
   const cb = lsGet<Background[]>('dnd24-backgrounds')
   const ci = lsGet<Record<string, string>>('dnd24-feature-it')
-  if (cs && cc && cb && ci) {
+  const ces = lsGet<Record<string, string>>('dnd24-feature-es')
+  if (cs && cc && cb && ci && ces) {
     // La funzione di trasformazione non è serializzabile, quindi in cache non
     // c'è: il modulo va importato comunque. È minuscolo — la funzione più i 23
     // incantesimi esclusivi del 2024 — e per questo non viene messo in cache.
@@ -124,7 +128,7 @@ function ensureDnd2024(): Promise<void> {
       import('./dnd2024/rules'),
       import('./dnd2024/prepared'),
     ]).then(([sp, ru, pr]) => {
-      _dnd24Species = cs; _dnd24Classes = cc; _dnd24Backgrounds = cb; _dnd24FeatureIt = ci
+      _dnd24Species = cs; _dnd24Classes = cc; _dnd24Backgrounds = cb; _dnd24FeatureIt = ci; _dnd24FeatureEs = ces
       _toDnd24Spells = sp.toDnd2024Spells
       _dnd24HalfCasterSlots = ru.getHalfCasterSlotsForLevel2024
       _dnd24MulticlassSpellSlots = ru.getMulticlassSpellSlots2024
@@ -138,17 +142,20 @@ function ensureDnd2024(): Promise<void> {
     import('./dnd2024/backgrounds'),
     import('./dnd2024/spells'),
     import('./dnd2024/classes-it'),
+    import('./dnd2024/classes-es'),
     import('./dnd2024/rules'),
     import('./dnd2024/prepared'),
-  ]).then(([r, c, b, sp, itMod, ru, pr]) => {
+  ]).then(([r, c, b, sp, itMod, esMod, ru, pr]) => {
     _dnd24Species = r.dnd2024Species
     _dnd24Classes = c.dnd2024Classes
     _dnd24Backgrounds = b.dnd2024Backgrounds
     _dnd24FeatureIt = itMod.dnd2024FeatureDescriptionsIt
+    _dnd24FeatureEs = esMod.dnd2024FeatureDescriptionsEs
     lsSet('dnd24-species', r.dnd2024Species)
     lsSet('dnd24-classes', c.dnd2024Classes)
     lsSet('dnd24-backgrounds', b.dnd2024Backgrounds)
     lsSet('dnd24-feature-it', itMod.dnd2024FeatureDescriptionsIt)
+    lsSet('dnd24-feature-es', esMod.dnd2024FeatureDescriptionsEs)
     _toDnd24Spells = sp.toDnd2024Spells
     _dnd24HalfCasterSlots = ru.getHalfCasterSlotsForLevel2024
     _dnd24MulticlassSpellSlots = ru.getMulticlassSpellSlots2024
@@ -198,24 +205,29 @@ function ensureDnd5eRaces(): Promise<void> {
 }
 
 function ensureDnd5eClasses(): Promise<void> {
-  if (_dnd5eClasses && _dnd5eFeatureIt) return Promise.resolve()
+  if (_dnd5eClasses && _dnd5eFeatureIt && _dnd5eFeatureEs) return Promise.resolve()
   if (_pDnd5eClasses) return _pDnd5eClasses
   const cached = lsGet<CharacterClass[]>('dnd5e-classes')
   const cachedIt = lsGet<{ desc: Record<string, string>; names: Record<string, string> }>('dnd5e-feature-it')
-  if (cached && cachedIt) {
+  const cachedEs = lsGet<{ desc: Record<string, string>; names: Record<string, string> }>('dnd5e-feature-es')
+  if (cached && cachedIt && cachedEs) {
     _dnd5eClasses = cached
     _dnd5eFeatureIt = cachedIt
+    _dnd5eFeatureEs = cachedEs
     return Promise.resolve()
   }
   _pDnd5eClasses = Promise.all([
     import('./dnd5e/classes'),
     import('./dnd5e/classes-it'),
-  ]).then(([m, itMod]) => {
+    import('./dnd5e/classes-es'),
+  ]).then(([m, itMod, esMod]) => {
     _dnd5eClasses = m.classes
     // I nomi dei privilegi D&D vivono in gameTerms: qui solo le descrizioni.
     _dnd5eFeatureIt = { desc: itMod.dnd5eFeatureDescriptionsIt, names: {} }
+    _dnd5eFeatureEs = { desc: esMod.dnd5eFeatureDescriptionsEs, names: {} }
     lsSet('dnd5e-classes', m.classes)
     lsSet('dnd5e-feature-it', _dnd5eFeatureIt)
+    lsSet('dnd5e-feature-es', _dnd5eFeatureEs)
   })
   return _pDnd5eClasses
 }
@@ -641,6 +653,14 @@ export function getFeatureDescription(
   locale: string,
   fallback: string,
 ): string {
+  if (locale === 'es') {
+    // El español solo cubre dnd5e y dnd2024: Brancalonia y Apocalisse no
+    // tienen mapa propio y caen al inglés, igual que cualquier otro locale
+    // sin cobertura.
+    if (variant === 'dnd2024') return _dnd24FeatureEs?.[featureId] ?? fallback
+    if (variant === 'brancalonia' || variant === 'apocalisse') return fallback
+    return _dnd5eFeatureEs?.desc[featureId] ?? fallback
+  }
   if (locale !== 'it') return fallback
   // Il 2024 non ricade sui testi del 2014: le regole sono diverse e id uguali
   // (rage, extra-attack...) descriverebbero privilegi che non coincidono.
@@ -661,6 +681,12 @@ export function getFeatureName(
   locale: string,
   fallback: string,
 ): string {
+  if (locale === 'es') {
+    // dnd5e's Es cache has an empty `names` map (names live in gameTerms),
+    // same as the it cache — kept for shape parity, not currently populated.
+    if (variant === 'brancalonia' || variant === 'apocalisse') return fallback
+    return _dnd5eFeatureEs?.names[featureId] ?? fallback
+  }
   if (locale !== 'it') return fallback
   const variantMap = variant === 'brancalonia' ? _brancaFeatureIt
     : variant === 'apocalisse' ? _apoFeatureIt
@@ -1037,6 +1063,7 @@ export function _resetCaches(): void {
   // continuava a vedere le specie e le classi caricate dal test precedente.
   _dnd24Species = _dnd24Classes = _dnd24Backgrounds = _dnd24Spells = null
   _dnd24FeatureIt = null
+  _dnd24FeatureEs = null
   _toDnd24Spells = null
   _dnd24HalfCasterSlots = null
   _dnd24MulticlassSpellSlots = null

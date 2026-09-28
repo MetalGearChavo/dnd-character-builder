@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { dnd2024Feats, getFeatsByCategory, getDnd2024Feat } from './feats'
 import { dnd2024FeatDescriptionsIt, getDnd2024FeatDescription } from './feats-it'
+import { dnd2024FeatDescriptionsEs } from './feats-es'
 import { featureNamesIt } from '@/i18n/gameTerms'
 
 /**
@@ -159,5 +160,20 @@ describe('talenti 2024 in italiano', () => {
     expect(getDnd2024FeatDescription('grappler', 'en', en)).toBe(en)
     // Un id sconosciuto non deve svuotare la scheda: torna il testo di partenza.
     expect(getDnd2024FeatDescription('tough', 'it', en)).toBe(en)
+  })
+
+  it('getDnd2024FeatDescription responde en español solo en español', () => {
+    const en = getDnd2024Feat('grappler')!.description
+    expect(getDnd2024FeatDescription('grappler', 'es', en)).toBe(dnd2024FeatDescriptionsEs['grappler'])
+    expect(getDnd2024FeatDescription('grappler', 'en', en)).toBe(en)
+    // Un id desconocido no debe vaciar la ficha: devuelve el texto de partida.
+    expect(getDnd2024FeatDescription('tough', 'es', en)).toBe(en)
+  })
+})
+
+describe('talentos 2024 en español: cobertura', () => {
+  it('tiene una traducción en español para cada talento del catálogo', () => {
+    const faltantes = dnd2024Feats.map(f => f.id).filter(id => !(id in dnd2024FeatDescriptionsEs))
+    expect(faltantes).toEqual([])
   })
 })

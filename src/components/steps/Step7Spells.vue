@@ -6,7 +6,7 @@ import { getSpells, getSpellSlots, getSpellcastingProfile, getClasses, getMultic
 import type { SpellcastingMode } from '@/data'
 import type { CasterType } from '@/data/dnd5e/classes'
 import { useGameTerms } from '@/composables/useGameTerms'
-import { ensureSpellTextsIt, getSpellTextIt } from '@/data/spells-it'
+import { ensureSpellTexts, getSpellText } from '@/data/spells-it'
 import type { Spell } from '@/data/dnd5e/spells'
 import { rollDice } from '@/utils/diceRoller'
 import VariantPromo from '@/components/shared/VariantPromo.vue'
@@ -23,20 +23,21 @@ const dataReady = ref(false)
 onMounted(async () => {
   await ensureSpellData(characterStore.character.variant)
   dataReady.value = true
-  void prefetchTestiIt()
+  void prefetchSpellText()
 })
 
-// ─── Testo italiano integrale ─────────────────────────────────────────────
+// ─── Testo integrale tradotto ──────────────────────────────────────────────
 // I nomi li traduce già `gt.spell()`; il testo segue la stessa logica di
-// locale, ma non può stare nello stesso modulo: sono ~300 KB per edizione.
-// Si scarica solo in italiano e solo qui, senza bloccare la lista — quando
-// arriva, `testiItReady` fa ricalcolare il riquadro di dettaglio.
-const testiItReady = ref(false)
+// locale, ma non può stare nello stesso modulo: sono centinaia di KB per
+// combinazione lingua/edizione. Si scarica solo quando serve e solo qui,
+// senza bloccare la lista — quando arriva, `spellTextReady` fa ricalcolare il
+// riquadro di dettaglio. Per le combinazioni senza copertura (inglese, o
+// spagnolo sul 2024) `ensureSpellTexts` non scarica nulla.
+const spellTextReady = ref(false)
 
-async function prefetchTestiIt() {
-  if (locale.value !== 'it') return
-  await ensureSpellTextsIt(characterStore.character.variant)
-  testiItReady.value = true
+async function prefetchSpellText() {
+  await ensureSpellTexts(characterStore.character.variant, locale.value)
+  spellTextReady.value = true
 }
 
 const allSpells = computed(() => { void dataReady.value; return getSpells(characterStore.character.variant) })
@@ -259,22 +260,21 @@ const detailDialogEl = ref<HTMLElement | null>(null)
 const detailOpener = ref<HTMLElement | null>(null)
 
 /**
- * Il testo da stampare nel riquadro: l'italiano integrale quando c'è, la
- * descrizione inglese dei dati altrimenti.
+ * Il testo da stampare nel riquadro: il testo integrale tradotto quando c'è,
+ * la descrizione inglese dei dati altrimenti.
  *
- * «Altrimenti» sono tre casi veri: interfaccia in inglese; *Blade Ward* e
- * *Hex*, che stanno nel Player's Handbook e non nell'SRD; gli incantesimi di
- * Brancalonia e Apocalisse, la cui descrizione è già italiana nei loro dati.
+ * «Altrimenti» sono quattro casi veri: interfaccia in inglese; spagnolo sul
+ * 2024, che non ha ancora traduzione; *Blade Ward* e *Hex*, che stanno nel
+ * Player's Handbook e non nell'SRD; gli incantesimi di Brancalonia e
+ * Apocalisse, la cui descrizione è già tradotta nei loro dati.
  */
-const detailText = computed<{ corpo: string; aLivelliSuperiori?: string; it: boolean }>(() => {
+const detailText = computed<{ corpo: string; aLivelliSuperiori?: string; translated: boolean }>(() => {
   const spell = selectedSpellDetail.value
-  if (!spell) return { corpo: '', it: false }
-  void testiItReady.value
-  if (locale.value === 'it') {
-    const testo = getSpellTextIt(characterStore.character.variant, spell.id)
-    if (testo) return { corpo: testo.testo, aLivelliSuperiori: testo.aLivelliSuperiori, it: true }
-  }
-  return { corpo: spell.description, it: false }
+  if (!spell) return { corpo: '', translated: false }
+  void spellTextReady.value
+  const testo = getSpellText(characterStore.character.variant, locale.value, spell.id)
+  if (testo) return { corpo: testo.testo, aLivelliSuperiori: testo.aLivelliSuperiori, translated: true }
+  return { corpo: spell.description, translated: false }
 })
 
 async function showDetail(spell: Spell, opener?: EventTarget | null) {
@@ -283,8 +283,8 @@ async function showDetail(spell: Spell, opener?: EventTarget | null) {
   selectedSpellDetail.value = spell
   // Se il prefetch non è ancora arrivato (o il passo è stato raggiunto senza
   // passare da onMounted), il riquadro parte con la descrizione inglese e si
-  // riscrive appena il modulo italiano è pronto.
-  void prefetchTestiIt()
+  // riscrive appena il modulo tradotto è pronto.
+  void prefetchSpellText()
   await nextTick()
   // Il riquadro è modale: senza spostarci il fuoco un lettore di schermo
   // continuerebbe a leggere la lista sotto, che nel frattempo è inerte.
@@ -523,12 +523,12 @@ function onDetailKeydown(e: KeyboardEvent) {
               tengono in piedi una tabella o un elenco puntato. Lasciandoli
               passare così restano leggibili senza doverli reinterpretare.
             -->
-            <p class="mt-3" :class="{ 'whitespace-pre-line': detailText.it }">{{ detailText.corpo }}</p>
+            <p class="mt-3" :class="{ 'whitespace-pre-line': detailText.translated }">{{ detailText.corpo }}</p>
             <p v-if="detailText.aLivelliSuperiori" class="mt-3 whitespace-pre-line">
               <strong>{{ t('spells.atHigherLevels') }}:</strong> {{ detailText.aLivelliSuperiori }}
             </p>
             <!-- CC-BY-4.0: l'attribuzione va dove il testo si legge. -->
-            <p v-if="detailText.it" class="mt-4 pt-3 border-t border-stone-700 text-xs text-stone-500">
+            <p v-if="detailText.translated" class="mt-4 pt-3 border-t border-stone-700 text-xs text-stone-500">
               {{ t('spells.srdCredit') }}
               <router-link to="/credits" class="text-amber-500 hover:text-amber-400 transition-colors">{{ t('credits.title') }}</router-link>
             </p>

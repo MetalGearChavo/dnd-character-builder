@@ -168,6 +168,24 @@ dall'aspetto del testo, e vengono anche i rientri di capoverso, che
 l'estrazione piatta butta via. È il metodo con cui è stato prodotto il
 compendio da cui questi due file arrivano.
 
+## Spanish spell text
+
+`src/data/dnd5e/spells-es.ts` porta il testo integrale in spagnolo di 315 dei
+317 incantesimi 2014 (stessi due esclusi dell'edizione italiana: *Blade Ward*
+e *Hex*, fuori SRD). A differenza del testo italiano, questo **non viene da
+un compendio esterno né da uno script deterministico**: è una traduzione
+scritta per questo progetto, senza un SRD spagnolo ufficiale e gratuito da
+cui attingere. Non essendo copiato da un testo concesso in licenza, non
+comporta un obbligo di attribuzione CC-BY — ma per lo stesso motivo va letto
+come un best-effort, non come una fonte verificata riga per riga contro un
+manuale pubblicato.
+
+Il 2024 non ha ancora una traduzione: `game-dnd24-spells-es` non esiste, e
+quella combinazione ricade sulla descrizione inglese, con lo stesso
+meccanismo già usato per Brancalonia e Apocalisse quando mancano di un testo
+in una lingua. Estendere la copertura al 2024 è un lavoro futuro, non
+pianificato in questa passata.
+
 ## Condizioni
 
 Le quindici condizioni di ciascuna edizione — nome e testo in italiano — arrivano

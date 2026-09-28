@@ -66,7 +66,7 @@ When adding a new feature, follow these steps in order:
 | Metric | Limit |
 |--------|-------|
 | Initial JS (gzipped) | < 170 KB |
-| Total JS (all chunks, gzipped) | < 950 KB |
+| Total JS (all chunks, gzipped) | < 1150 KB |
 | CSS (gzipped) | < 15 KB |
 | Lighthouse Accessibility | >= 90 |
 | Lighthouse Performance | >= 80 |
@@ -80,7 +80,16 @@ passo incantesimi. Chi gioca in inglese non ne scarica nessuno. Entrambi sono
 fuori dal precache del service worker — se un giorno ci rientrassero,
 `src/vite-config.test.ts` diventa rosso.
 
-Il totale resta la metrica sbagliata da leggere da sola: somma pdf-lib, i due
+Con lo spagnolo il tetto è salito ancora, da 950 a 1150 KB gz, per lo stesso
+motivo e con lo stesso meccanismo: `game-dnd5e-spells-es` (84 KB gz) è un
+terzo chunk fuori dal precache, scaricato solo da chi gioca in spagnolo e solo
+nel passo incantesimi. Lo spagnolo per ora copre solo dnd5e (2014): il 2024
+non ha ancora una traduzione degli incantesimi e ricade sull'inglese, come già
+succede per Brancalonia e Apocalisse — non esiste quindi un
+`game-dnd24-spells-es` da aggiungere al precache o al runtime caching finché
+quella traduzione non arriva.
+
+Il totale resta la metrica sbagliata da leggere da sola: somma pdf-lib, i tre
 file di lingua e i dati di quattro varianti, che nessun visitatore scarica
 tutti insieme. La riga che vincola davvero l'avvio è la prima.
 

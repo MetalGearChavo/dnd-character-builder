@@ -46,8 +46,16 @@ export function furthestAllowedStep(c: StepProgress): number {
   return STEP_KEYS.length - 1
 }
 
+/** Ricalca la stessa logica di rilevamento di `src/i18n/index.ts`. */
+function detectLocale(): string {
+  const nav = navigator.language
+  if (nav.startsWith('it')) return 'it'
+  if (nav.startsWith('es')) return 'es'
+  return 'en'
+}
+
 export const useAppStore = defineStore('app', () => {
-  const locale = ref<string>(navigator.language.startsWith('it') ? 'it' : 'en')
+  const locale = ref<string>(detectLocale())
   const currentStep = ref(0)
   const totalSteps = ref(STEP_KEYS.length)
   const theme = ref<ThemeMode>('auto')

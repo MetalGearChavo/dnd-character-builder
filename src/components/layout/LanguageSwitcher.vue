@@ -13,6 +13,7 @@ const menuId = `lang-switcher-menu-${useId()}`
 const languages = [
   { code: 'it', label: 'Italiano', flag: 'IT' },
   { code: 'en', label: 'English', flag: 'EN' },
+  { code: 'es', label: 'Español', flag: 'ES' },
 ]
 
 const rootEl = ref<HTMLElement | null>(null)
