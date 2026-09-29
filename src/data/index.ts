@@ -53,6 +53,7 @@ function lsSet(module: string, data: unknown): void {
 
 // D&D 5e
 let _dnd5eRaces: readonly Race[] | null = null
+let _dnd5eTraitDescriptions: Record<string, string> | null = null
 let _dnd5eClasses: readonly CharacterClass[] | null = null
 let _dnd5eBackgrounds: readonly Background[] | null = null
 let _dnd5eSpells: readonly Spell[] | null = null
@@ -91,6 +92,7 @@ let _dnd24Spells: readonly Spell[] | null = null
 let _dnd24FeatureIt: Record<string, string> | null = null
 // Descripciones en español de los privilegios 2024: mismo criterio que _dnd24FeatureIt.
 let _dnd24FeatureEs: Record<string, string> | null = null
+let _dnd24TraitDescriptions: Record<string, string> | null = null
 // Le condizioni del 2024 sono un testo diverso, non una revisione di quello
 // del 2014: viaggiano in un modulo loro e non ricadono mai sull'altra edizione.
 let _dnd24Conditions: readonly Condition[] | null = null
@@ -111,7 +113,8 @@ function ensureDnd2024(): Promise<void> {
   // `_toDnd24Spells` fa parte della condizione: senza di lui getSpells('dnd2024')
   // ricade sulla lista 2014, ed è esattamente quello che succedeva alla seconda
   // visita, quando i dati arrivavano dalla cache.
-  if (_dnd24Species && _dnd24Classes && _dnd24Backgrounds && _dnd24FeatureIt && _dnd24FeatureEs && _toDnd24Spells
+  if (_dnd24Species && _dnd24Classes && _dnd24Backgrounds && _dnd24FeatureIt && _dnd24FeatureEs
+    && _dnd24TraitDescriptions && _toDnd24Spells
     && _dnd24HalfCasterSlots && _dnd24MulticlassSpellSlots && _dnd24Prepared) return Promise.resolve()
   if (_pDnd24) return _pDnd24
   const cs = lsGet<Race[]>('dnd24-species')
@@ -119,7 +122,8 @@ function ensureDnd2024(): Promise<void> {
   const cb = lsGet<Background[]>('dnd24-backgrounds')
   const ci = lsGet<Record<string, string>>('dnd24-feature-it')
   const ces = lsGet<Record<string, string>>('dnd24-feature-es')
-  if (cs && cc && cb && ci && ces) {
+  const ct = lsGet<Record<string, string>>('dnd24-race-traits')
+  if (cs && cc && cb && ci && ces && ct) {
     // La funzione di trasformazione non è serializzabile, quindi in cache non
     // c'è: il modulo va importato comunque. È minuscolo — la funzione più i 23
     // incantesimi esclusivi del 2024 — e per questo non viene messo in cache.
@@ -129,6 +133,7 @@ function ensureDnd2024(): Promise<void> {
       import('./dnd2024/prepared'),
     ]).then(([sp, ru, pr]) => {
       _dnd24Species = cs; _dnd24Classes = cc; _dnd24Backgrounds = cb; _dnd24FeatureIt = ci; _dnd24FeatureEs = ces
+      _dnd24TraitDescriptions = ct
       _toDnd24Spells = sp.toDnd2024Spells
       _dnd24HalfCasterSlots = ru.getHalfCasterSlotsForLevel2024
       _dnd24MulticlassSpellSlots = ru.getMulticlassSpellSlots2024
@@ -143,19 +148,22 @@ function ensureDnd2024(): Promise<void> {
     import('./dnd2024/spells'),
     import('./dnd2024/classes-it'),
     import('./dnd2024/classes-es'),
+    import('./dnd2024/raceTraits'),
     import('./dnd2024/rules'),
     import('./dnd2024/prepared'),
-  ]).then(([r, c, b, sp, itMod, esMod, ru, pr]) => {
+  ]).then(([r, c, b, sp, itMod, esMod, traitMod, ru, pr]) => {
     _dnd24Species = r.dnd2024Species
     _dnd24Classes = c.dnd2024Classes
     _dnd24Backgrounds = b.dnd2024Backgrounds
     _dnd24FeatureIt = itMod.dnd2024FeatureDescriptionsIt
     _dnd24FeatureEs = esMod.dnd2024FeatureDescriptionsEs
+    _dnd24TraitDescriptions = traitMod.dnd2024TraitDescriptions
     lsSet('dnd24-species', r.dnd2024Species)
     lsSet('dnd24-classes', c.dnd2024Classes)
     lsSet('dnd24-backgrounds', b.dnd2024Backgrounds)
     lsSet('dnd24-feature-it', itMod.dnd2024FeatureDescriptionsIt)
     lsSet('dnd24-feature-es', esMod.dnd2024FeatureDescriptionsEs)
+    lsSet('dnd24-race-traits', traitMod.dnd2024TraitDescriptions)
     _toDnd24Spells = sp.toDnd2024Spells
     _dnd24HalfCasterSlots = ru.getHalfCasterSlotsForLevel2024
     _dnd24MulticlassSpellSlots = ru.getMulticlassSpellSlots2024
@@ -192,14 +200,24 @@ let _pApoRules: Promise<void> | null = null
 // ─── D&D 5e Module Loaders ──────────────────────────────────────────────────
 
 function ensureDnd5eRaces(): Promise<void> {
-  if (_dnd5eRaces) return Promise.resolve()
+  if (_dnd5eRaces && _dnd5eTraitDescriptions) return Promise.resolve()
   if (_pDnd5eRaces) return _pDnd5eRaces
   // Try localStorage first
   const cached = lsGet<Race[]>('dnd5e-races')
-  if (cached) { _dnd5eRaces = cached; return Promise.resolve() }
-  _pDnd5eRaces = import('./dnd5e/races').then(m => {
+  const cachedTraits = lsGet<Record<string, string>>('dnd5e-race-traits')
+  if (cached && cachedTraits) {
+    _dnd5eRaces = cached
+    _dnd5eTraitDescriptions = cachedTraits
+    return Promise.resolve()
+  }
+  _pDnd5eRaces = Promise.all([
+    import('./dnd5e/races'),
+    import('./dnd5e/raceTraits'),
+  ]).then(([m, t]) => {
     _dnd5eRaces = m.races
+    _dnd5eTraitDescriptions = t.dnd5eTraitDescriptions
     lsSet('dnd5e-races', m.races)
+    lsSet('dnd5e-race-traits', t.dnd5eTraitDescriptions)
   })
   return _pDnd5eRaces
 }
@@ -699,12 +717,18 @@ export function getTraitDescription(
   traitId: string,
   locale: string,
 ): string {
-  const maps = variant === 'brancalonia' ? _brancaTraitDescriptions
-    : variant === 'apocalisse' ? _apoTraitDescriptions
-    : null
-  if (!maps) return ''
-  const dict = locale === 'it' ? maps.it : maps.en
-  return dict[traitId] ?? maps.en[traitId] ?? ''
+  if (variant === 'brancalonia' || variant === 'apocalisse') {
+    const maps = variant === 'brancalonia' ? _brancaTraitDescriptions : _apoTraitDescriptions
+    if (!maps) return ''
+    const dict = locale === 'it' ? maps.it : maps.en
+    return dict[traitId] ?? maps.en[traitId] ?? ''
+  }
+  // Base D&D race traits only have English text (see raceTraits.ts): asking
+  // for Italian returns '', which srdText.ts turns into the "English only"
+  // label instead of silently handing back English under an Italian UI.
+  if (locale === 'it') return ''
+  const map = variant === 'dnd2024' ? _dnd24TraitDescriptions : _dnd5eTraitDescriptions
+  return map?.[traitId] ?? ''
 }
 
 // ─── Classes ────────────────────────────────────────────────────────────────
@@ -1048,6 +1072,8 @@ export function getAvailableLanguages(variant: GameVariant): string[] {
 /** @internal Reset all caches — for testing only */
 export function _resetCaches(): void {
   _dnd5eRaces = _dnd5eClasses = _dnd5eBackgrounds = _dnd5eSpells = null
+  _dnd5eTraitDescriptions = null
+  _dnd24TraitDescriptions = null
   _dnd5eEquipment = null
   _dnd5eConditions = _dnd24Conditions = null
   _pDnd5eConditions = _pDnd24Conditions = null

@@ -402,11 +402,11 @@ function addSecondaryClass(clsId: string) {
 function removeSecondaryClass(clsId: string) {
   characterStore.removeMulticlass(clsId)
 }
-// In italiano mostriamo il testo dei manuali italiani: quelli di Brancalonia
-// e Apocalisse per i contenuti propri, l'SRD 5.2.1 italiano come autorità
-// terminologica per i privilegi delle classi base di D&D.
+// In italiano e spagnolo mostriamo il testo tradotto delle classi base di
+// D&D; Brancalonia e Apocalisse restano in italiano in ogni lingua, perché
+// il blurb lì è sapore d'ambientazione, non testo di regole da tradurre.
 function classBlurb(cls: { id: string; blurb?: string }): string | undefined {
-  return cls.blurb ?? getClassBlurb(characterStore.character.variant, cls.id)
+  return cls.blurb ?? getClassBlurb(characterStore.character.variant, cls.id, locale.value)
 }
 
 function statoPrivilegio(feature: { id?: string; description?: string }): TestoSrd {

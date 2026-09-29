@@ -114,6 +114,13 @@ This project follows the [W3C Web Sustainability Guidelines 1.0](https://www.w3.
 - All new interactive elements need `aria-label` or `aria-labelledby`
 - Respect `prefers-reduced-motion` for any animations
 - WSG guideline references in code comments where applicable (e.g. `// WSG 3.3`)
+- **Language for new work**: this repo is a fork (MaadCity619/MetalGearChavo's
+  fork of Brainstorm-Club/dnd-character-builder). Existing comments and test
+  descriptions are largely Italian — leave those as they are — but write all
+  **new** test names/descriptions and **new** code comments in **English**
+  going forward. This does not apply to user-facing strings, which stay
+  driven by `src/i18n/locales/*.json` regardless of the language the code
+  around them is commented in.
 
 ## Sustainability Tracking
 

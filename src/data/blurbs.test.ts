@@ -34,6 +34,24 @@ describe('descrizioni brevi per la scelta', () => {
     expect(getClassBlurb('brancalonia', 'burattinaio')).toBeDefined()
   })
 
+  it('in spagnolo dnd5e ha un blurb tradotto, diverso da quello italiano', () => {
+    for (const c of classes) {
+      const es = getClassBlurb('dnd5e', c.id, 'es')
+      expect(es, c.id).toBeDefined()
+      expect(es!.length, c.id).toBeGreaterThan(80)
+      expect(es!.length, `${c.id} troppo lungo per una card`).toBeLessThan(230)
+      expect(es, c.id).not.toBe(getClassBlurb('dnd5e', c.id, 'it'))
+    }
+  })
+
+  it('in spagnolo Brancalonia e Apocalisse restano in italiano', () => {
+    for (const v of ['brancalonia', 'apocalisse'] as const) {
+      for (const c of classes) {
+        expect(getClassBlurb(v, c.id, 'es'), `${v}/${c.id}`).toBe(getClassBlurb(v, c.id, 'it'))
+      }
+    }
+  })
+
   it('ogni razza di Brancalonia e Apocalisse ha un blurb', () => {
     for (const r of [...brancaloniaRaces, ...apocalisseRaces]) {
       expect(r.blurb, r.name).toBeDefined()

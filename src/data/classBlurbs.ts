@@ -38,6 +38,39 @@ const dnd5e: Record<string, string> = {
     'Studia la magia sul libro degli incantesimi ed è quello che ne conosce di più. Fragile, ma nessuno ha la sua versatilità ai livelli alti.',
 }
 
+/**
+ * Traducción española del mismo blurb, solo para las clases base de D&D
+ * (`dnd5e`): Brancalonia y Apocalisse son ambientaciones de sabor italiano y
+ * su texto sigue en italiano en cualquier idioma, igual que ya pasaba antes
+ * de que existiera el español.
+ */
+const dnd5eEs: Record<string, string> = {
+  barbarian:
+    'Entra en cólera y aguanta el golpe: resistencia al daño, d12 de vida y ninguna armadura que ponerse. El muro de la primera línea, que golpea más fuerte cuanto más se enfada.',
+  bard:
+    'Combate con la palabra y la música: inspira a sus compañeros con un dado que sumar a sus tiradas, y lanza conjuros de cualquier lista. El comodín del grupo.',
+  cleric:
+    'Canaliza el poder de su divinidad para curar, expulsar a los no muertos y repartir mandobles con armadura puesta. Prepara cada día los conjuros que necesita.',
+  druid:
+    'Se transforma en bestia y doblega la naturaleza a su voluntad. El único capaz de pasar el día como un oso y, por la noche, lanzar un conjuro.',
+  fighter:
+    'El maestro de armas puro: más ataques que nadie, una acción extra cuando hace falta, y la posibilidad de repetir tiradas de salvación falladas. Simple y eficaz.',
+  monk:
+    'Combate a mano limpia canalizando el ki: ráfagas de golpes, defensa sin armadura y la capacidad de aturdir a un enemigo con un toque. Rápido y escurridizo.',
+  paladin:
+    'Guerrero consagrado a un juramento: cura con las manos, protege a sus compañeros con su aura y descarga espacios de conjuro en castigos radiantes devastadores.',
+  ranger:
+    'Cazador y batidor: conoce a un enemigo y un terreno mejor que nadie, combate a distancia o con dos armas, y lanza algún conjuro de la naturaleza.',
+  rogue:
+    'Golpea donde duele: ataque furtivo una vez por turno, el doble de su bonificador de competencia en sus habilidades, y una acción adicional cada turno para moverse y desaparecer.',
+  sorcerer:
+    'La magia le corre por la sangre, no la estudia. Pocos conjuros, pero moldeables a placer con la metamagia gastando puntos de hechicería.',
+  warlock:
+    'Ha sellado un pacto con una entidad de otro mundo. Pocos espacios de conjuro que se recuperan en cada descanso corto, y los ruegos ocultos que dan forma a su estilo.',
+  wizard:
+    'Estudia la magia en su libro de conjuros y es quien más conoce de todos. Frágil, pero nadie tiene su versatilidad a niveles altos.',
+}
+
 const brancalonia: Record<string, string> = {
   barbarian:
     "Il pagano vive dentro i confini del Regno da secoli e parla un Volgare perfetto, ma ha scelto l'Ira — o come la chiama lui, la Violenza — per risolvere le dispute.",
@@ -103,8 +136,15 @@ const BY_VARIANT: Record<GameVariant, Record<string, string>> = {
   apocalisse,
 }
 
-/** Blurb della classe per la variante in corso, con ricaduta su quello di D&D. */
-export function getClassBlurb(variant: GameVariant, classId: string): string | undefined {
+/**
+ * Blurb della classe per la variante in corso, con ricaduta su quello di D&D.
+ *
+ * Lo spagnolo copre solo `dnd5e`: Brancalonia e Apocalisse restano in
+ * italiano a qualunque lingua, come già succedeva prima che esistesse lo
+ * spagnolo (sono ambientazioni di sapore italiano, non testo di regole).
+ */
+export function getClassBlurb(variant: GameVariant, classId: string, locale: string = 'it'): string | undefined {
   if (variant === 'dnd2024') return undefined
+  if (locale === 'es' && variant === 'dnd5e') return dnd5eEs[classId]
   return BY_VARIANT[variant]?.[classId] ?? dnd5e[classId]
 }

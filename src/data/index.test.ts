@@ -3,6 +3,7 @@ import {
   isVariantLoaded,
   _resetCaches,
   getRaces,
+  getTraitDescription,
   getClasses,
   getBackgrounds,
   getRules,
@@ -51,6 +52,34 @@ describe('data loader', () => {
 
     it('apocalisse has races', () => {
       expect(getRaces('apocalisse').length).toBeGreaterThan(0)
+    })
+  })
+
+  // Regression test: dnd5e/dnd2024 race traits used to have no description in
+  // any locale (the card showed the trait name and nothing else). See
+  // src/data/dnd5e/raceTraits.ts and src/data/dnd2024/raceTraits.ts.
+  describe('getTraitDescription', () => {
+    it('returns English text for a base dnd5e trait', () => {
+      const text = getTraitDescription('dnd5e', 'breath-weapon', 'en')
+      expect(text.length).toBeGreaterThan(20)
+    })
+
+    it('serves the same English text to Spanish, since there is no Spanish translation yet', () => {
+      expect(getTraitDescription('dnd5e', 'breath-weapon', 'es'))
+        .toBe(getTraitDescription('dnd5e', 'breath-weapon', 'en'))
+    })
+
+    it('returns an empty string for Italian, so srdText.ts can show the "English only" label', () => {
+      expect(getTraitDescription('dnd5e', 'breath-weapon', 'it')).toBe('')
+    })
+
+    it('returns English text for a base dnd2024 trait', () => {
+      const text = getTraitDescription('dnd2024', 'draconic-ancestry', 'en')
+      expect(text.length).toBeGreaterThan(20)
+    })
+
+    it('returns an empty string for an unknown trait id', () => {
+      expect(getTraitDescription('dnd5e', 'not-a-real-trait', 'en')).toBe('')
     })
   })
 
