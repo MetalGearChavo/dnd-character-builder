@@ -60,9 +60,15 @@ export function slugPrivilegioBackground(name: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-/** Il testo italiano per un id, scritto a mano o importato dall'SRD. */
-function italiano(variant: GameVariant, id: string): string {
+/**
+ * Il testo di un privilegio nella lingua richiesta (italiano o spagnolo),
+ * scritto a mano o importato dall'SRD. Ritorna '' per ogni altra lingua, così
+ * l'inglese non passa mai da qui spacciato per una traduzione.
+ */
+function testoProprio(variant: GameVariant, id: string, locale: string): string {
   if (!id) return ''
+  if (locale === 'es') return getFeatureDescription(variant, id, 'es', '')
+  if (locale !== 'it') return ''
   // I testi scritti a mano vincono: sono quelli che il resto dell'app usa, e
   // l'importatore si rifiuta di duplicarli.
   const aMano = getFeatureDescription(variant, id, 'it', '')
@@ -70,15 +76,17 @@ function italiano(variant: GameVariant, id: string): string {
   return SRD_IT_DESCRIPTIONS[edizione(variant)][id] ?? ''
 }
 
-function esito(locale: string, testoIt: string, testoEn: string): TestoSrd {
-  if (locale !== 'it') return testoEn ? { stato: 'presente', testo: testoEn } : ASSENTE
-  if (testoIt) return { stato: 'presente', testo: testoIt }
+function esito(locale: string, testoTradotto: string, testoEn: string): TestoSrd {
+  if (locale !== 'it' && locale !== 'es') return testoEn ? { stato: 'presente', testo: testoEn } : ASSENTE
+  if (testoTradotto) return { stato: 'presente', testo: testoTradotto }
   return testoEn ? { stato: 'soloInglese', testo: testoEn } : ASSENTE
 }
 
 /**
  * Il testo di un privilegio di classe o di sottoclasse. `testoEn` è la
- * descrizione inglese che sta nei dati, quando c'è.
+ * descrizione inglese che sta nei dati, quando c'è. L'italiano copre classi
+ * base, Brancalonia e Apocalisse; lo spagnolo per ora solo le classi base di
+ * dnd5e e dnd2024 (`classes-es.ts`), via `getFeatureDescription`.
  */
 export function testoPrivilegio(
   variant: GameVariant,
@@ -86,7 +94,7 @@ export function testoPrivilegio(
   locale: string,
   testoEn: string,
 ): TestoSrd {
-  return esito(locale, italiano(variant, featureId), testoEn.trim())
+  return esito(locale, testoProprio(variant, featureId, locale), testoEn.trim())
 }
 
 /**
@@ -101,37 +109,43 @@ export function testoTratto(
 ): TestoSrd {
   if (!traitId) return ASSENTE
   const testoEn = getTraitDescription(variant, traitId, 'en').trim()
-  if (locale !== 'it') return esito(locale, '', testoEn)
+  if (locale !== 'it' && locale !== 'es') return esito(locale, '', testoEn)
 
-  const aMano = italiano(variant, traitId)
-  if (aMano) return { stato: 'presente', testo: aMano }
-  // `getTraitDescription` ripiega da sé sull'inglese quando l'italiano manca:
-  // per distinguere una traduzione da un ripiego si confrontano le due rese.
-  // Le mappe it ed en di Brancalonia e Apocalisse sono in lingue diverse,
-  // quindi l'uguaglianza significa ripiego, non coincidenza.
-  const reso = getTraitDescription(variant, traitId, 'it').trim()
+  // I testi scritti a mano dei privilegi vincono anche qui, ma solo in
+  // italiano: non esiste ancora un dizionario di privilegi scritti a mano in
+  // spagnolo condiviso con i tratti.
+  if (locale === 'it') {
+    const aMano = testoProprio(variant, traitId, 'it')
+    if (aMano) return { stato: 'presente', testo: aMano }
+  }
+  // `getTraitDescription` ripiega da sé sull'inglese quando la lingua richiesta
+  // manca: per distinguere una traduzione vera da quel ripiego si confrontano
+  // le due rese. Vale sia per le mappe it/en di Brancalonia e Apocalisse sia
+  // per lo spagnolo di dnd5e (raceTraits-es.ts) — dnd2024 e Brancalonia/
+  // Apocalisse non hanno ancora un tratto in spagnolo, quindi ci ricadono.
+  const reso = getTraitDescription(variant, traitId, locale).trim()
   if (reso && reso !== testoEn) return { stato: 'presente', testo: reso }
-  return esito(locale, '', testoEn)
+  return testoEn ? { stato: 'soloInglese', testo: testoEn } : ASSENTE
 }
 
 /**
  * Il testo del privilegio concesso da un background. Il builder lo tiene per
- * nome e con la sola descrizione inglese; l'italiano, se e quando l'SRD lo
+ * nome e con la sola descrizione inglese; la traduzione, se e quando l'SRD la
  * darà, arriva per id.
  *
- * `testoItGiaRisolto` è l'italiano che il chiamante ha già trovato per altra
- * via. Serve al 2024, dove il privilegio del background **è** il talento
- * d'origine e il suo testo sta nel catalogo dei talenti
- * (`dnd2024/feats-it.ts`), che questo modulo non importa per non trascinarlo
- * in ogni passo del wizard.
+ * `testoTradottoGiaRisolto` è il testo nella lingua richiesta che il chiamante
+ * ha già trovato per altra via. Serve al 2024, dove il privilegio del
+ * background **è** il talento d'origine e il suo testo sta nel catalogo dei
+ * talenti (`dnd2024/feats-it.ts` / `feats-es.ts`), che questo modulo non
+ * importa per non trascinarlo in ogni passo del wizard.
  */
 export function testoPrivilegioBackground(
   variant: GameVariant,
   featureName: string,
   locale: string,
   testoEn: string,
-  testoItGiaRisolto = '',
+  testoTradottoGiaRisolto = '',
 ): TestoSrd {
   const id = slugPrivilegioBackground(featureName)
-  return esito(locale, italiano(variant, id) || testoItGiaRisolto.trim(), testoEn.trim())
+  return esito(locale, testoProprio(variant, id, locale) || testoTradottoGiaRisolto.trim(), testoEn.trim())
 }

@@ -72,14 +72,6 @@ describe('useAppStore', () => {
     expect(store.currentStep).toBe(0)
   })
 
-  it('sets locale', () => {
-    const store = useAppStore()
-    store.setLocale('en')
-    expect(store.locale).toBe('en')
-    store.setLocale('it')
-    expect(store.locale).toBe('it')
-  })
-
   /**
    * Il passo non era persistito: ricaricare la pagina a metà procedura
    * riportava al primo passo mentre il personaggio restava dov'era.

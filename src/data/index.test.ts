@@ -64,9 +64,11 @@ describe('data loader', () => {
       expect(text.length).toBeGreaterThan(20)
     })
 
-    it('serves the same English text to Spanish, since there is no Spanish translation yet', () => {
-      expect(getTraitDescription('dnd5e', 'breath-weapon', 'es'))
-        .toBe(getTraitDescription('dnd5e', 'breath-weapon', 'en'))
+    it('returns a hand-translated Spanish text for a base dnd5e trait, distinct from English', () => {
+      const es = getTraitDescription('dnd5e', 'breath-weapon', 'es')
+      const en = getTraitDescription('dnd5e', 'breath-weapon', 'en')
+      expect(es).not.toBe(en)
+      expect(es.length).toBeGreaterThan(20)
     })
 
     it('returns an empty string for Italian, so srdText.ts can show the "English only" label', () => {
@@ -76,6 +78,11 @@ describe('data loader', () => {
     it('returns English text for a base dnd2024 trait', () => {
       const text = getTraitDescription('dnd2024', 'draconic-ancestry', 'en')
       expect(text.length).toBeGreaterThan(20)
+    })
+
+    it('serves the same English text to Spanish for dnd2024, since there is no Spanish translation yet', () => {
+      expect(getTraitDescription('dnd2024', 'draconic-ancestry', 'es'))
+        .toBe(getTraitDescription('dnd2024', 'draconic-ancestry', 'en'))
     })
 
     it('returns an empty string for an unknown trait id', () => {

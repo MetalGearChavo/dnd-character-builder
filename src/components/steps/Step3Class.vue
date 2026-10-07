@@ -6,6 +6,7 @@ import { getClasses, getFeatureName } from '@/data'
 import { testoPrivilegio, type TestoSrd } from '@/data/srdText'
 import type { CharacterClass, Subclass } from '@/data/dnd5e/classes'
 import { SKILLS } from '@/data/dnd5e/skills'
+import { getSkillDescription } from '@/data/dnd5e/skillDescriptions'
 import { useGameTerms } from '@/composables/useGameTerms'
 import { getClassBlurb } from '@/data/classBlurbs'
 import { THIRD_CASTER_SUBCLASSES } from '@/data/spellcasting'
@@ -28,6 +29,19 @@ function skillDisplayName(skillId: string): string {
   const skill = SKILLS.find(s => s.id === skillId)
   return skill ? gt.skill(skill.name) : skillId
 }
+
+/** Tooltip text so a skill choice doesn't rest on the name alone. */
+function skillTitle(skillId: string): string {
+  return getSkillDescription(skillId, locale.value)
+}
+
+// The native `title` attribute alone is too easy to miss — no visual cue, a
+// long hover delay, and no touch support. `hoveredSkill` drives a visible
+// description line under the button row instead, on hover or keyboard focus.
+const hoveredSkill = ref('')
+const hoveredSkillDescription = computed(() =>
+  hoveredSkill.value ? getSkillDescription(hoveredSkill.value, locale.value) : '',
+)
 
 const classes = computed(() => getClasses(characterStore.character.variant))
 const selectedClass = ref<CharacterClass | null>(null)
@@ -505,10 +519,16 @@ function featureLabel(feature: { id?: string; name: string }): string {
                 : 'bg-stone-700 text-stone-300 hover:bg-stone-600'"
             :aria-pressed="selectedSkills.includes(skill)"
             :aria-disabled="!selectedSkills.includes(skill) && selectedSkills.length >= selectedClass.numSkillChoices"
+            :title="skillTitle(skill)"
+            @mouseenter="hoveredSkill = skill"
+            @mouseleave="hoveredSkill = ''"
+            @focus="hoveredSkill = skill"
+            @blur="hoveredSkill = ''"
           >
             {{ skillDisplayName(skill) }}
           </button>
         </div>
+        <p class="text-xs text-stone-500 mt-1 min-h-[1rem]">{{ selectedClass.skillChoices.includes(hoveredSkill) ? hoveredSkillDescription : '' }}</p>
       </div>
 
       <!-- Competenze raddoppiate (Expertise) -->
@@ -530,10 +550,16 @@ function featureLabel(feature: { id?: string; name: string }): string {
                 : 'bg-stone-700 text-stone-300 hover:bg-stone-600'"
             :aria-pressed="selectedExpertise.includes(skill)"
             :aria-disabled="!selectedExpertise.includes(skill) && selectedExpertise.length >= expertiseMax"
+            :title="skillTitle(skill)"
+            @mouseenter="hoveredSkill = skill"
+            @mouseleave="hoveredSkill = ''"
+            @focus="hoveredSkill = skill"
+            @blur="hoveredSkill = ''"
           >
             {{ skillDisplayName(skill) }}
           </button>
         </div>
+        <p class="text-xs text-stone-500 mt-1 min-h-[1rem]">{{ expertiseOptions.includes(hoveredSkill) ? hoveredSkillDescription : '' }}</p>
       </div>
 
       <!-- Competenze a scelta concesse da un privilegio -->
@@ -559,10 +585,16 @@ function featureLabel(feature: { id?: string; name: string }): string {
                 : 'bg-stone-700 text-stone-300 hover:bg-stone-600'"
             :aria-pressed="(scelte[scelta.featureId] ?? []).includes(skill)"
             :aria-disabled="!(scelte[scelta.featureId] ?? []).includes(skill) && (scelte[scelta.featureId] ?? []).length >= scelta.quante"
+            :title="skillTitle(skill)"
+            @mouseenter="hoveredSkill = skill"
+            @mouseleave="hoveredSkill = ''"
+            @focus="hoveredSkill = skill"
+            @blur="hoveredSkill = ''"
           >
             {{ skillDisplayName(skill) }}
           </button>
         </div>
+        <p class="text-xs text-stone-500 mt-1 min-h-[1rem]">{{ scelta.candidate.includes(hoveredSkill) ? hoveredSkillDescription : '' }}</p>
       </div>
 
       <!-- Features -->

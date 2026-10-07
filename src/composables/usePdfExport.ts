@@ -1,10 +1,10 @@
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PDFDocument } from 'pdf-lib'
 import { useCharacterStore } from '@/stores/character'
-import { useAppStore } from '@/stores/app'
 import type { CharacterData } from '@/stores/character'
 import {
-  getDnd5eFieldMapping, getBrancaloniaFieldMapping, getApocalisseFieldMapping,
+  getDnd5eFieldMapping, getBrancaloniaFieldMapping, getApocalisseFieldMapping, dnd5eSheetFile,
 } from '@/utils/pdfFieldMapping'
 
 /**
@@ -17,6 +17,7 @@ const ACCENT_FALLBACK: Record<string, string> = {
   à: "a'", è: "e'", é: "e'", ì: "i'", í: "i'", ò: "o'", ó: "o'", ù: "u'", ú: "u'",
   À: "A'", È: "E'", É: "E'", Ì: "I'", Ò: "O'", Ù: "U'",
   '\u2019': "'", '\u2018': "'", '\u201c': '"', '\u201d': '"', '\u2013': '-', '\u2014': '-', '\u2026': '...',
+  '\u00e1': "a'", '\u00c1': "A'", '\u00cd': "I'", '\u00d3': "O'", '\u00da': "U'", '\u00f1': 'n', '\u00d1': 'N',
 }
 
 function transliterate(text: string): string {
@@ -25,6 +26,7 @@ function transliterate(text: string): string {
 
 export function usePdfExport() {
   const exporting = ref(false)
+  const { locale } = useI18n()
 
   /**
    * Export a character to PDF.
@@ -53,7 +55,8 @@ export function usePdfExport() {
         brancalonia: 'brancalonia-sheet.pdf',
         apocalisse: 'apocalisse-sheet.pdf',
       }
-      const pdfUrl = `${base}pdf/${MODELLI[char.variant] ?? 'dnd-5e-sheet.pdf'}`
+      // D&D sheets follow the UI language: Italian UI → Italian sheet, otherwise English
+      const pdfUrl = `${base}pdf/${MODELLI[char.variant] ?? dnd5eSheetFile(locale.value)}`
 
       const pdfBytes = await fetch(pdfUrl).then(r => r.arrayBuffer())
       const pdfDoc = await PDFDocument.load(pdfBytes)
@@ -61,7 +64,7 @@ export function usePdfExport() {
 
       // La scheda D&D segue la lingua dell'interfaccia; quelle di Brancalonia
       // e Apocalisse restano in italiano (lo decide getDnd5eFieldMapping).
-      const uiLocale = useAppStore().locale
+      const uiLocale = locale.value
       const fieldMapping = char.variant === 'brancalonia'
         ? getBrancaloniaFieldMapping(char)
         : char.variant === 'apocalisse'

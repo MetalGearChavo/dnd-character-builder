@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { getDnd5eFieldMapping, getBrancaloniaFieldMapping } from './pdfFieldMapping'
+import { getDnd5eFieldMapping, getBrancaloniaFieldMapping, dnd5eSheetFile } from './pdfFieldMapping'
 import { computeArmorClass } from './calculations'
 import { generateRandomCharacter } from './randomCharacter'
 import { useCharacterStore } from '@/stores/character'
@@ -132,6 +132,34 @@ describe('mappa dei campi della scheda PDF', () => {
     expect(fields['Incantesimi livello 1 ']).toBe('Salto, Allarme')
     expect(fields['Incantesimi livello 2']).toBe('Protezione dal Veleno, Individuazione di Trappole')
     expect(fields['Allineamento']).toBe('Legale Buono')
+  })
+
+  it('picks the sheet template from the UI language', () => {
+    expect(dnd5eSheetFile('it')).toBe('dnd-5e-sheet.pdf')
+    expect(dnd5eSheetFile('en')).toBe('dnd-5e-sheet-english.pdf')
+    expect(dnd5eSheetFile('es')).toBe('dnd-5e-sheet-english.pdf')
+  })
+
+  it('English sheet: uses the English field names for skills, saves and spells', () => {
+    const c = generateRandomCharacter('dnd5e', 3)
+    c.skillProficiencies = ['stealth']
+    c.savingThrowProficiencies = ['dex']
+    c.cantrips = []
+    c.spellsKnown = ['1-jump']
+    c.spellcastingAbility = 'wis'
+    c.spellcastingClass = 'ranger'
+
+    const f = getDnd5eFieldMapping(c, 'en')
+    expect(f['Check Box 39'], 'Stealth proficiency').toBe(true)
+    expect(f['Check Box 18'], 'DEX save proficiency').toBe(true)
+    expect(f['Stealth ']).toBeDefined()
+    expect(f['DEXmod ']).toBeDefined()
+    expect(f['CHamod']).toBeDefined()
+    expect(f['Spells 1015'], 'first level-1 spell').toBe('Jump')
+    expect(f['CharacterName 2']).toBe(c.name)
+    for (const italianOnly of ['ACRO', 'STLTH', 'STLTHP', 'STRprof', 'DEXprof', 'Spells 101014', 'Feats+Traits']) {
+      expect(f, italianOnly).not.toHaveProperty(italianOnly)
+    }
   })
 
   it('la scheda di D&D 5e in inglese scrive allineamento e competenze per esteso', () => {
@@ -370,6 +398,35 @@ describe('mappa dei campi della scheda PDF', () => {
       expect(getDnd5eFieldMapping(c, 'it')['ClassLevel'], variant).toBe('Druido 6')
       expect(getDnd5eFieldMapping(c, 'it')['Spellcasting Class 2'], variant).toBe('Druido')
       expect(getDnd5eFieldMapping(c, 'en')['ClassLevel'], variant).toBe('Druid 6')
+      expect(getDnd5eFieldMapping(c, 'es')['ClassLevel'], variant).toBe('Druida 6')
+    }
+  })
+
+  /**
+   * Regressione: la scheda seguiva la lingua dell'interfaccia solo per
+   * l'italiano, e collassava qualunque altra lingua sull'inglese — lo
+   * spagnolo compreso, nonostante i dizionari esistano già in gameTerms.ts.
+   */
+  it('D&D 5e e 2024: equipaggiamento e lingue seguono lo spagnolo della scheda', () => {
+    for (const variant of ['dnd5e', 'dnd2024'] as const) {
+      const c = generateRandomCharacter(variant)
+      c.armor = 'Chain Mail'
+      c.equipment = ['dungeoneer-pack']
+      c.weapons = []
+      c.languages = ['Common']
+
+      const fields = getDnd5eFieldMapping(c, 'es')
+      const armorEs = translateGameTerm('Chain Mail', 'es', 'armor')
+      const packEs = translateGameTerm("Dungeoneer's Pack", 'es', 'pack')
+      const langEs = translateGameTerm('Common', 'es', 'language')
+      // Assert against real translated values, not a self-referencing call to
+      // the same function on both sides of the comparison.
+      expect(armorEs, variant).toBe('Cota de malla')
+      expect(packEs, variant).toBe('Equipo de explorador de mazmorras')
+      expect(langEs, variant).toBe('Común')
+
+      expect(String(fields['Equipment']), variant).toBe(`${armorEs}, ${packEs}`)
+      expect(String(fields['ProficienciesLang']), variant).toContain(`Idiomas: ${langEs}`)
     }
   })
 

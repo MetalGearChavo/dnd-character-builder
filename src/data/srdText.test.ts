@@ -23,11 +23,21 @@ describe('testoTratto', () => {
     expect(result.stato).toBe('soloInglese')
   })
 
-  it('a base dnd2024 race trait has a description in English and Spanish', () => {
-    for (const locale of ['en', 'es']) {
-      const result = testoTratto('dnd2024', 'draconic-ancestry', locale)
-      expect(result.stato, locale).toBe('presente')
-    }
+  it('a base dnd5e race trait is actually translated in Spanish, not English under the hood', () => {
+    const result = testoTratto('dnd5e', 'darkvision', 'es')
+    expect(result.stato).toBe('presente')
+    expect(result.stato === 'presente' && result.testo).toContain('oscuridad')
+    expect(result.stato === 'presente' && result.testo).not.toContain('dim light')
+  })
+
+  it('a base dnd2024 race trait has a description in English', () => {
+    const result = testoTratto('dnd2024', 'draconic-ancestry', 'en')
+    expect(result.stato).toBe('presente')
+  })
+
+  it('a base dnd2024 race trait falls back to English-labelled text in Spanish, since dnd2024 has no Spanish trait translations yet', () => {
+    const result = testoTratto('dnd2024', 'draconic-ancestry', 'es')
+    expect(result.stato).toBe('soloInglese')
   })
 
   it('an unknown trait id is reported as absent, not as an error', () => {

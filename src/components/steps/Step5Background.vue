@@ -5,6 +5,7 @@ import { useCharacterStore } from '@/stores/character'
 import { getBackgrounds } from '@/data'
 import type { Background } from '@/data/dnd5e/backgrounds'
 import { SKILLS } from '@/data/dnd5e/skills'
+import { getSkillDescription } from '@/data/dnd5e/skillDescriptions'
 import { getFeatsByCategory } from '@/data/dnd2024/feats'
 import { getDnd2024FeatDescription } from '@/data/dnd2024/feats-it'
 import { testoPrivilegioBackground, type TestoSrd } from '@/data/srdText'
@@ -38,6 +39,11 @@ function bgDisplayName(bg: Background): string {
 function skillDisplayName(skillId: string): string {
   const skill = SKILLS.find(s => s.id === skillId)
   return skill ? gt.skill(skill.name) : skillId
+}
+
+/** Tooltip text so a skill choice doesn't rest on the name alone. */
+function skillTitle(skillId: string): string {
+  return getSkillDescription(skillId, locale.value)
 }
 
 const backgrounds = computed(() => getBackgrounds(characterStore.character.variant))
@@ -89,15 +95,16 @@ const originFeatLabel = computed(() => {
  * varianti, e il passo lo stampava così com'era in mezzo a un'interfaccia
  * italiana. Ora l'inglese resta ma viene etichettato — e nel 2024 non serve
  * nemmeno: lì il privilegio del background **è** il talento d'origine, che
- * l'SRD 5.2.1 italiano descrive e il builder ha già tradotto in `feats-it`.
- * Si passa quel testo a `testoPrivilegioBackground`, che lo preferisce
- * all'inglese senza che questo passo debba conoscere l'ordine di precedenza.
+ * l'SRD 5.2.1 italiano descrive e il builder ha già tradotto (`feats-it`,
+ * `feats-es`), nella lingua attiva. Si passa quel testo a
+ * `testoPrivilegioBackground`, che lo preferisce all'inglese senza che questo
+ * passo debba conoscere l'ordine di precedenza.
  */
 const testoPrivilegioIt = computed<TestoSrd>(() => {
   const bg = selectedBg.value
   if (!bg?.feature) return { stato: 'assente' }
   const featId = originFeatId(bg, getFeatsByCategory('origin'))
-  const daTalento = featId ? getDnd2024FeatDescription(featId, 'it', '') : ''
+  const daTalento = featId ? getDnd2024FeatDescription(featId, locale.value, '') : ''
   return testoPrivilegioBackground(
     characterStore.character.variant,
     bg.feature.name,
@@ -347,11 +354,12 @@ function selectBackground(bg: Background) {
                 :key="slot"
                 class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-sm text-stone-200"
                 :aria-label="t('background.chooseSkills', { count: tier.count })"
+                :title="skillTitle(chosenSkills[ti]?.[slot - 1] || '')"
                 :value="chosenSkills[ti]?.[slot - 1] || ''"
                 @change="chooseSkill(ti, slot - 1, ($event.target as HTMLSelectElement).value)"
               >
                 <option value="">—</option>
-                <option v-for="s in skillOptions(ti, slot - 1)" :key="s" :value="s">
+                <option v-for="s in skillOptions(ti, slot - 1)" :key="s" :value="s" :title="skillTitle(s)">
                   {{ skillDisplayName(s) }}
                 </option>
               </select>
@@ -392,7 +400,7 @@ function selectBackground(bg: Background) {
           <p class="text-stone-400">{{ originFeatLabel }}</p>
         </div>
         <div v-if="selectedBg.toolProficiencies.length">
-          <h4 class="font-semibold text-stone-300">Strumenti</h4>
+          <h4 class="font-semibold text-stone-300">{{ t('equipment.tools') }}</h4>
           <p class="text-stone-400">{{ selectedBg.toolProficiencies.join(', ') }}</p>
         </div>
         <div v-if="selectedBg.languages > 0">

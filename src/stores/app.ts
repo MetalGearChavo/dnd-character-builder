@@ -46,16 +46,7 @@ export function furthestAllowedStep(c: StepProgress): number {
   return STEP_KEYS.length - 1
 }
 
-/** Ricalca la stessa logica di rilevamento di `src/i18n/index.ts`. */
-function detectLocale(): string {
-  const nav = navigator.language
-  if (nav.startsWith('it')) return 'it'
-  if (nav.startsWith('es')) return 'es'
-  return 'en'
-}
-
 export const useAppStore = defineStore('app', () => {
-  const locale = ref<string>(detectLocale())
   const currentStep = ref(0)
   const totalSteps = ref(STEP_KEYS.length)
   const theme = ref<ThemeMode>('auto')
@@ -65,10 +56,6 @@ export const useAppStore = defineStore('app', () => {
    * per primo, cioè i punteggi da scrivere invece dei dadi da tirare.
    */
   const transcribing = ref(false)
-
-  function setLocale(lang: string) {
-    locale.value = lang
-  }
 
   function setTheme(mode: ThemeMode) {
     theme.value = mode
@@ -111,8 +98,8 @@ export const useAppStore = defineStore('app', () => {
   }
 
   return {
-    locale, currentStep, totalSteps, theme, transcribing,
-    setLocale, setTheme, setStep, setTranscribing, nextStep, prevStep, resetSteps, clampStepToProgress,
+    currentStep, totalSteps, theme, transcribing,
+    setTheme, setStep, setTranscribing, nextStep, prevStep, resetSteps, clampStepToProgress,
   }
 }, {
   persist: {
@@ -121,6 +108,6 @@ export const useAppStore = defineStore('app', () => {
     // sta con lui: il personaggio in corso sopravvive al ricaricamento, e
     // ritrovarsi il tiro di dadi al posto dei campi da riempire a metà
     // trascrizione sarebbe la stessa perdita di contesto.
-    pick: ['locale', 'theme', 'currentStep', 'transcribing'],
+    pick: ['theme', 'currentStep', 'transcribing'],
   },
 })

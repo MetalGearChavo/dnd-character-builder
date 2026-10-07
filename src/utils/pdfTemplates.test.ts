@@ -22,15 +22,18 @@ import type { GameVariant } from '@/stores/app'
  * Qui si carica il modello vero e si controlla che ogni casella su cui il
  * codice scrive esista davvero.
  */
-const MODELLI: [GameVariant, string, 'dnd' | 'branca' | 'apo'][] = [
+const MODELLI: [GameVariant, string, 'dnd' | 'dnd-en' | 'branca' | 'apo'][] = [
   ['dnd5e', 'dnd-5e-sheet', 'dnd'],
   ['dnd2024', 'dnd-5e-sheet', 'dnd'],
+  ['dnd5e', 'dnd-5e-sheet-english', 'dnd-en'],
+  ['dnd2024', 'dnd-5e-sheet-english', 'dnd-en'],
   ['apocalisse', 'apocalisse-sheet', 'apo'],
   ['brancalonia', 'brancalonia-sheet', 'branca'],
 ]
 
 const mappa = (quale: string, c: Parameters<typeof getDnd5eFieldMapping>[0]) =>
   quale === 'dnd' ? getDnd5eFieldMapping(c, 'it')
+    : quale === 'dnd-en' ? getDnd5eFieldMapping(c, 'en')
     : quale === 'branca' ? getBrancaloniaFieldMapping(c)
       : getApocalisseFieldMapping(c)
 
@@ -41,7 +44,7 @@ async function caselleDelModello(file: string): Promise<Set<string>> {
   return new Set(doc.getForm().getFields().map(f => f.getName()))
 }
 
-describe.each(MODELLI)('scheda PDF — %s', (variante, file, quale) => {
+describe.each(MODELLI)('scheda PDF — %s (%s)', (variante, file, quale) => {
   beforeAll(async () => {
     setActivePinia(createPinia())
     await preloadVariantData(variante)
@@ -70,7 +73,7 @@ describe.each(MODELLI)('scheda PDF — %s', (variante, file, quale) => {
       const c = generateRandomCharacter(variante, 1 + (i % 12))
       const m = mappa(quale, c)
       const chi = `${variante} ${c.race}/${c.className} lv${c.level}`
-      const [nome, classe, razza] = quale === 'dnd'
+      const [nome, classe, razza] = quale === 'dnd' || quale === 'dnd-en'
         ? [m['CharacterName'], m['ClassLevel'], m['Race ']]
         : quale === 'apo'
           ? [m['nome-personaggio'], m['classe-livello'], m['origine']]

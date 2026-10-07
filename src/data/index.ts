@@ -54,6 +54,9 @@ function lsSet(module: string, data: unknown): void {
 // D&D 5e
 let _dnd5eRaces: readonly Race[] | null = null
 let _dnd5eTraitDescriptions: Record<string, string> | null = null
+// Descripciones en español de los rasgos raciales de dnd5e (2014): mismo
+// criterio que _dnd5eFeatureEs, cargadas junto a los rasgos en inglés.
+let _dnd5eTraitDescriptionsEs: Record<string, string> | null = null
 let _dnd5eClasses: readonly CharacterClass[] | null = null
 let _dnd5eBackgrounds: readonly Background[] | null = null
 let _dnd5eSpells: readonly Spell[] | null = null
@@ -200,24 +203,29 @@ let _pApoRules: Promise<void> | null = null
 // ─── D&D 5e Module Loaders ──────────────────────────────────────────────────
 
 function ensureDnd5eRaces(): Promise<void> {
-  if (_dnd5eRaces && _dnd5eTraitDescriptions) return Promise.resolve()
+  if (_dnd5eRaces && _dnd5eTraitDescriptions && _dnd5eTraitDescriptionsEs) return Promise.resolve()
   if (_pDnd5eRaces) return _pDnd5eRaces
   // Try localStorage first
   const cached = lsGet<Race[]>('dnd5e-races')
   const cachedTraits = lsGet<Record<string, string>>('dnd5e-race-traits')
-  if (cached && cachedTraits) {
+  const cachedTraitsEs = lsGet<Record<string, string>>('dnd5e-race-traits-es')
+  if (cached && cachedTraits && cachedTraitsEs) {
     _dnd5eRaces = cached
     _dnd5eTraitDescriptions = cachedTraits
+    _dnd5eTraitDescriptionsEs = cachedTraitsEs
     return Promise.resolve()
   }
   _pDnd5eRaces = Promise.all([
     import('./dnd5e/races'),
     import('./dnd5e/raceTraits'),
-  ]).then(([m, t]) => {
+    import('./dnd5e/raceTraits-es'),
+  ]).then(([m, t, tEs]) => {
     _dnd5eRaces = m.races
     _dnd5eTraitDescriptions = t.dnd5eTraitDescriptions
+    _dnd5eTraitDescriptionsEs = tEs.dnd5eTraitDescriptionsEs
     lsSet('dnd5e-races', m.races)
     lsSet('dnd5e-race-traits', t.dnd5eTraitDescriptions)
+    lsSet('dnd5e-race-traits-es', tEs.dnd5eTraitDescriptionsEs)
   })
   return _pDnd5eRaces
 }
@@ -728,6 +736,12 @@ export function getTraitDescription(
   // label instead of silently handing back English under an Italian UI.
   if (locale === 'it') return ''
   const map = variant === 'dnd2024' ? _dnd24TraitDescriptions : _dnd5eTraitDescriptions
+  // dnd5e (2014) also has hand-translated Spanish trait text; dnd2024 and
+  // Brancalonia/Apocalisse don't yet, so they fall back to English like any
+  // other locale without coverage (see raceTraits-es.ts).
+  if (locale === 'es' && variant === 'dnd5e') {
+    return _dnd5eTraitDescriptionsEs?.[traitId] ?? map?.[traitId] ?? ''
+  }
   return map?.[traitId] ?? ''
 }
 
@@ -1073,6 +1087,7 @@ export function getAvailableLanguages(variant: GameVariant): string[] {
 export function _resetCaches(): void {
   _dnd5eRaces = _dnd5eClasses = _dnd5eBackgrounds = _dnd5eSpells = null
   _dnd5eTraitDescriptions = null
+  _dnd5eTraitDescriptionsEs = null
   _dnd24TraitDescriptions = null
   _dnd5eEquipment = null
   _dnd5eConditions = _dnd24Conditions = null

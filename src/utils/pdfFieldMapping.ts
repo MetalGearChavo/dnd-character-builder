@@ -7,8 +7,9 @@ import { getMoveSlots, getKnownMoveCount, getBrawlClassFeature, getBrawlAce } fr
 import { getSpells, getClasses, getSpellSlots, getMulticlassSpellSlots } from '@/data'
 import { mezzaCompetenza } from '@/domain/competenze'
 import {
-  classNamesIt, brancaloniaClassNamesIt, apocalisseClassNamesIt,
-  equipmentNamesIt, weaponNamesIt, armorNamesIt, equipmentPacksIt,
+  classNamesIt, classNamesEs, brancaloniaClassNamesIt, apocalisseClassNamesIt,
+  equipmentNamesIt, equipmentNamesEs, weaponNamesIt, weaponNamesEs,
+  armorNamesIt, armorNamesEs, equipmentPacksIt, equipmentPacksEs,
   translateGameTerm,
 } from '@/i18n/gameTerms'
 
@@ -18,8 +19,51 @@ import {
  */
 function sheetLocale(variant: string, uiLocale: string): string {
   if (variant === 'brancalonia' || variant === 'apocalisse') return 'it'
+  if (uiLocale === 'es') return 'es'
   return uiLocale === 'it' ? 'it' : 'en'
 }
+
+/**
+ * Template file for the D&D sheet. Only the Italian UI uses the Italian
+ * sheet; every other locale gets the English one (no Spanish template exists).
+ */
+export function dnd5eSheetFile(uiLocale: string): string {
+  return uiLocale === 'it' ? 'dnd-5e-sheet.pdf' : 'dnd-5e-sheet-english.pdf'
+}
+
+/**
+ * Field names of the English sheet that differ from the Italian one the
+ * mapping is written against. Derived by matching widget positions in both
+ * templates: the skill/save checkboxes are anonymous ("Check Box 23") and
+ * follow the English alphabetical row order. Trailing spaces are real.
+ */
+const EN_SHEET_FIELDS: Record<string, string> = {
+  'DEXmod': 'DEXmod ', 'CHAmod': 'CHamod',
+  'STRprof': 'Check Box 11', 'DEXprof': 'Check Box 18', 'CONprof': 'Check Box 19',
+  'INTprof': 'Check Box 20', 'WISprof': 'Check Box 21', 'CHAprof': 'Check Box 22',
+  'ACRO': 'Acrobatics', 'ACROP': 'Check Box 23',
+  'ANIM': 'Animal', 'ANIMP': 'Check Box 24',
+  'ARC': 'Arcana', 'ARCP': 'Check Box 25',
+  'ATH': 'Athletics', 'ATHP': 'Check Box 26',
+  'DEC': 'Deception ', 'DECP': 'Check Box 27',
+  'HIST': 'History ', 'HISTP': 'Check Box 28',
+  'INS': 'Insight', 'INSP': 'Check Box 29',
+  'INTI': 'Intimidation', 'INTIP': 'Check Box 30',
+  'INV': 'Investigation ', 'INVP': 'Check Box 31',
+  'MED': 'Medicine', 'MEDP': 'Check Box 32',
+  'NAT': 'Nature', 'NATP': 'Check Box 33',
+  'PERC': 'Perception ', 'PERCP': 'Check Box 34',
+  'PERF': 'Performance', 'PERFP': 'Check Box 35',
+  'PERS': 'Persuasion', 'PERSP': 'Check Box 36',
+  'REL': 'Religion', 'RELP': 'Check Box 37',
+  'SLE': 'SleightofHand', 'SLEP': 'Check Box 38',
+  'STLTH': 'Stealth ', 'STLTHP': 'Check Box 39',
+  'SURV': 'Survival', 'SURVP': 'Check Box 40',
+  'Feats+Traits': 'Feat+Traits',
+}
+
+/** Etichetta della riga lingue, nella lingua della scheda. */
+const LANG_LABEL: Record<string, string> = { it: 'Lingue', es: 'Idiomas', en: 'Languages' }
 
 /** Capitalize a class ID for English display (e.g., "barbarian" → "Barbarian") */
 function capitalizeId(id: string): string {
@@ -53,6 +97,7 @@ function pdfClassName(classId: string, variant: string, locale = 'it'): string {
   if (variant === 'apocalisse') {
     return apocalisseClassNamesIt[classId] ?? classNamesIt[capitalizeId(classId)] ?? capitalizeId(classId)
   }
+  if (locale === 'es') return classNamesEs[capitalizeId(classId)] ?? capitalizeId(classId)
   if (locale !== 'it') return capitalizeId(classId)
   return classNamesIt[capitalizeId(classId)] ?? capitalizeId(classId)
 }
@@ -84,16 +129,20 @@ const DND5E_SPELL_FIELDS: Record<number, readonly string[]> = {
  * provano nell'ordine le tabelle esistenti.
  */
 function pdfEquipmentName(item: string, locale: string): string {
-  if (locale !== 'it') return item
+  if (locale !== 'it' && locale !== 'es') return item
+  const equipmentNames = locale === 'es' ? equipmentNamesEs : equipmentNamesIt
+  const weaponNames = locale === 'es' ? weaponNamesEs : weaponNamesIt
+  const armorNames = locale === 'es' ? armorNamesEs : armorNamesIt
+  const equipmentPacks = locale === 'es' ? equipmentPacksEs : equipmentPacksIt
   const titled = titleCase(item)
   const packKey = /-pack$/.test(item)
     ? `${titleCase(item.replace(/-pack$/, ''))}'s Pack`
     : ''
-  return equipmentNamesIt[item]
-    ?? equipmentNamesIt[titled]
-    ?? weaponNamesIt[titled]
-    ?? armorNamesIt[titled]
-    ?? (packKey ? equipmentPacksIt[packKey] ?? item : item)
+  return equipmentNames[item]
+    ?? equipmentNames[titled]
+    ?? weaponNames[titled]
+    ?? armorNames[titled]
+    ?? (packKey ? equipmentPacks[packKey] ?? item : item)
 }
 
 /**
@@ -204,6 +253,18 @@ function savingThrow(char: CharacterData, ability: keyof AbilityScores): number 
 }
 
 export function getDnd5eFieldMapping(char: CharacterData, uiLocale = 'en'): Record<string, string | boolean> {
+  const fields = buildDnd5eFields(char, uiLocale)
+  if (uiLocale === 'it') return fields
+  // English sheet: same layout, different field names
+  const renamed: Record<string, string | boolean> = {}
+  for (const [name, value] of Object.entries(fields)) {
+    renamed[EN_SHEET_FIELDS[name] ?? name] = value
+  }
+  renamed['CharacterName 2'] = char.name
+  return renamed
+}
+
+function buildDnd5eFields(char: CharacterData, uiLocale: string): Record<string, string | boolean> {
   const prof = proficiencyBonus(char.level)
   const loc = sheetLocale(char.variant, uiLocale)
   const fields: Record<string, string | boolean> = {}
@@ -322,7 +383,7 @@ export function getDnd5eFieldMapping(char: CharacterData, uiLocale = 'en'): Reco
   fields['Equipment'] = [...armorLine, ...char.equipment.map(e => pdfEquipmentName(e, loc))].join(', ')
   const profLine = char.proficienciesOther.map(pr => translateGameTerm(pr, loc, 'proficiency')).join(', ')
   const langLine = char.languages.length
-    ? `${loc === 'it' ? 'Lingue' : 'Languages'}: ${char.languages.map(l => translateGameTerm(l, loc, 'language')).join(', ')}`
+    ? `${LANG_LABEL[loc] ?? 'Languages'}: ${char.languages.map(l => translateGameTerm(l, loc, 'language')).join(', ')}`
     : ''
   fields['ProficienciesLang'] = [profLine, langLine].filter(Boolean).join('\n')
   // Features and Traits - include Apocalisse mark/virtue/sin/humanity if applicable
@@ -421,7 +482,10 @@ export function getDnd5eFieldMapping(char: CharacterData, uiLocale = 'en'): Reco
     const byLevel = spellsByLevel(char)
     const slots = pdfSpellSlots(char)
     for (let lv = 0; lv <= 9; lv++) {
-      const boxes = DND5E_SPELL_FIELDS[lv]!
+      // The English sheet has no 'Spells 101014' box: level 1 starts at 'Spells 1015'
+      const boxes = uiLocale !== 'it' && lv === 1
+        ? DND5E_SPELL_FIELDS[1]!.filter(b => b !== 'Spells 101014')
+        : DND5E_SPELL_FIELDS[lv]!
       const ids = lv === 0
         ? [...char.cantrips, ...(byLevel.get(0) ?? []).filter(id => !char.cantrips.includes(id))]
         : byLevel.get(lv) ?? []
