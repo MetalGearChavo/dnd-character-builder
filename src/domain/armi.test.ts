@@ -201,10 +201,14 @@ describe('il passo Equipaggiamento usa la regola condivisa', () => {
     await preloadVariantData('dnd5e')
   })
 
-  function preparaGuerriero(str: number, dex: number) {
+  // The manual weapon toggles that used to drive this test are gone — the
+  // only surviving way to put a weapon on the sheet from this step is the
+  // official PHB starting-equipment chooser, so these now go through it.
+  function preparaPersonaggio(className: string, str: number, dex: number) {
     setActivePinia(createPinia())
     const store = useCharacterStore()
     store.character.variant = 'dnd5e'
+    store.character.className = className
     store.character.level = 5
     store.character.abilityScores.str = str
     store.character.abilityScores.dex = dex
@@ -212,33 +216,34 @@ describe('il passo Equipaggiamento usa la regola condivisa', () => {
     return { store, wrapper }
   }
 
-  function scegliArma(wrapper: ReturnType<typeof preparaGuerriero>['wrapper'], name: string) {
-    const btn = wrapper.find('[aria-label="equipment.martialWeapons"]')
-      .findAll('button')
-      .find(b => b.text().startsWith(name))
-    expect(btn, `pulsante arma "${name}"`).toBeTruthy()
-    return btn!.trigger('click')
+  function arma(store: ReturnType<typeof preparaPersonaggio>['store'], name: string) {
+    const w = store.character.weapons.find(w => w.name === name)
+    expect(w, `arma "${name}" in scheda`).toBeTruthy()
+    return w!
   }
 
   /**
    * Il passo deve dare gli stessi numeri del generatore sulla stessa arma:
    * lo stocco è accurato, e con Forza 18 e Destrezza 12 si tira di Forza.
+   * Il Ladro sceglie lo stocco per primo PHB, nessun clic serve.
    */
-  it("lo stocco in mano forzuta tira con la Forza, com'è nel generatore", async () => {
-    const { store, wrapper } = preparaGuerriero(18, 12)
-    await scegliArma(wrapper, 'Rapier')
-    expect(store.character.weapons[0]).toEqual({ name: 'Rapier', attackBonus: 7, damage: '1d8+4' })
+  it("lo stocco in mano forzuta tira con la Forza, com'è nel generatore", () => {
+    const { store } = preparaPersonaggio('rogue', 18, 12)
+    expect(arma(store, 'Rapier')).toEqual({ name: 'Rapier', attackBonus: 7, damage: '1d8+4' })
   })
 
-  it('e con la Destrezza quando è la Destrezza a essere migliore', async () => {
-    const { store, wrapper } = preparaGuerriero(10, 18)
-    await scegliArma(wrapper, 'Rapier')
-    expect(store.character.weapons[0]).toEqual({ name: 'Rapier', attackBonus: 7, damage: '1d8+4' })
+  it('e con la Destrezza quando è la Destrezza a essere migliore', () => {
+    const { store } = preparaPersonaggio('rogue', 10, 18)
+    expect(arma(store, 'Rapier')).toEqual({ name: 'Rapier', attackBonus: 7, damage: '1d8+4' })
   })
 
   it("l'arco resta sulla Destrezza anche al forzuto", async () => {
-    const { store, wrapper } = preparaGuerriero(18, 12)
-    await scegliArma(wrapper, 'Longbow')
-    expect(store.character.weapons[0]).toEqual({ name: 'Longbow', attackBonus: 4, damage: '1d8+1' })
+    // Fighter's first PHB choice line is chain mail vs. leather+longbow+20
+    // arrows; picking the second option is what brings a longbow onto the
+    // sheet.
+    const { store, wrapper } = preparaPersonaggio('fighter', 18, 12)
+    const armorChoiceButtons = wrapper.findAll('[role="radiogroup"]')[0]!.findAll('button')
+    await armorChoiceButtons[1]!.trigger('click')
+    expect(arma(store, 'Longbow')).toEqual({ name: 'Longbow', attackBonus: 4, damage: '1d8+1' })
   })
 })

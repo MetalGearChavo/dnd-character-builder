@@ -144,6 +144,8 @@
   },
   "equipment": {
     "title": "Equipo",
+    "startingEquipment": "Equipo inicial de clase",
+    "chooseOne": "Elige una opción",
     "startingPack": "Equipo inicial",
     "manual": "Selección manual",
     "weapons": "Armas",

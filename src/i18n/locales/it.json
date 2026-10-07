@@ -144,6 +144,8 @@
   },
   "equipment": {
     "title": "Equipaggiamento",
+    "startingEquipment": "Dotazione Iniziale",
+    "chooseOne": "Scegli un'opzione",
     "startingPack": "Pacchetto Iniziale",
     "manual": "Selezione Manuale",
     "weapons": "Armi",

@@ -10,6 +10,7 @@ import { pickRandomArchetype } from '@/data/personalityArchetypes'
 import { getFeatsByCategory } from '@/data/dnd2024/feats'
 import { castsSpells } from '@/data/spellcasting'
 import { calcolaAttacco, isADistanza, isAccurata } from '@/domain/armi'
+import { hasArmorProficiency } from '@/domain/armorProficiency'
 import {
   competenzeConcesse, raddoppiConcessi, competenzeDaScegliere,
   getExpertiseCount, getExpertiseOptions,
@@ -70,22 +71,18 @@ function selectClassGear(
   prof: number,
 ): { weapons: Weapon[]; armorName: string; useShield: boolean } {
   const armorProfs = cls.armorProficiencies
-  const hasShieldProf = armorProfs.some(p => p.toLowerCase().includes('shield'))
+  const hasShieldProf = hasArmorProficiency(armorProfs, 'shield')
   const isDexPrimary = cls.primaryAbility[0] === 'dex'
   const isCaster = cls.spellcasting !== null && cls.spellcasting.casterType !== 'third'
 
   // --- Armor ---
   let armorName = ''
   if (cls.id !== 'monk' && cls.id !== 'barbarian') {
-    const hasHeavy = armorProfs.some(p => p.toLowerCase() === 'heavy')
-    const hasMedium = armorProfs.some(p => p.toLowerCase() === 'medium')
-    const hasLight = armorProfs.some(p => p.toLowerCase() === 'light')
-
-    if (hasHeavy) {
+    if (hasArmorProficiency(armorProfs, 'heavy')) {
       armorName = pick(armorData.filter(a => a.type === 'heavy')).name
-    } else if (hasMedium) {
+    } else if (hasArmorProficiency(armorProfs, 'medium')) {
       armorName = pick(armorData.filter(a => a.type === 'medium')).name
-    } else if (hasLight) {
+    } else if (hasArmorProficiency(armorProfs, 'light')) {
       armorName = pick(armorData.filter(a => a.type === 'light')).name
     }
   }

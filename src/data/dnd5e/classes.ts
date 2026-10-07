@@ -1,4 +1,5 @@
 import type { AbilityScores } from '@/stores/character'
+import type { StartingEquipmentEntry } from '@/domain/startingEquipment'
 
 export type AbilityKey = keyof AbilityScores
 export type CasterType = 'full' | 'half' | 'third' | 'pact'
@@ -43,6 +44,13 @@ export interface CharacterClass {
   skillChoices: string[]
   numSkillChoices: number
   startingEquipment: string[]
+  /**
+   * The PHB 2014 starting-equipment table for this class, in choice form.
+   * Optional and dnd5e-only: `startingEquipment` above stays the single
+   * pre-picked loadout the random generator uses; this is what the
+   * Equipment step's chooser renders as A/B options.
+   */
+  startingEquipmentChoices?: StartingEquipmentEntry[]
   subclassLevel: number
   subclassName: string
   features: ClassFeature[]
@@ -103,6 +111,17 @@ export const classes: readonly CharacterClass[] = [
       'two handaxes',
       'explorer-pack',
       'four javelins',
+    ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Greataxe' }] },
+        { grants: [{ kind: 'weapon', name: 'Battleaxe' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'item', name: 'two handaxes' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { fixed: [{ kind: 'pack', name: "Explorer's Pack" }, { kind: 'item', name: 'four javelins' }] },
     ],
     subclassLevel: 3,
     subclassName: 'Primal Path',
@@ -170,6 +189,22 @@ export const classes: readonly CharacterClass[] = [
       'lute',
       'leather armor',
       'dagger',
+    ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Rapier' }] },
+        { grants: [{ kind: 'weapon', name: 'Longsword' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Diplomat's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Entertainer's Pack" }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'item', name: 'Lute' }] },
+        { grants: [{ kind: 'item', name: 'Musical instruments' }] },
+      ] },
+      { fixed: [{ kind: 'armor', name: 'Leather' }, { kind: 'weapon', name: 'Dagger' }] },
     ],
     subclassLevel: 3,
     subclassName: 'Bard College',
@@ -244,6 +279,26 @@ export const classes: readonly CharacterClass[] = [
       'shield',
       'holy symbol',
     ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Mace' }] },
+        { grants: [{ kind: 'weapon', name: 'Warhammer' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'armor', name: 'Scale Mail' }] },
+        { grants: [{ kind: 'armor', name: 'Leather' }] },
+        { grants: [{ kind: 'armor', name: 'Chain Mail' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Light Crossbow' }, { kind: 'item', name: '20 bolts' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Priest's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Explorer's Pack" }] },
+      ] },
+      { fixed: [{ kind: 'shield' }, { kind: 'item', name: 'holy symbol' }] },
+    ],
     subclassLevel: 1,
     subclassName: 'Divine Domain',
     spellcasting: {
@@ -311,6 +366,17 @@ export const classes: readonly CharacterClass[] = [
       'explorer-pack',
       'druidic focus',
     ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'shield' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Scimitar' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { fixed: [{ kind: 'armor', name: 'Leather' }, { kind: 'pack', name: "Explorer's Pack" }, { kind: 'item', name: 'druidic focus' }] },
+    ],
     subclassLevel: 2,
     subclassName: 'Druid Circle',
     spellcasting: {
@@ -372,6 +438,24 @@ export const classes: readonly CharacterClass[] = [
       'martial weapon and shield',
       'light crossbow and 20 bolts',
       'dungeoneer-pack',
+    ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'armor', name: 'Chain Mail' }] },
+        { grants: [{ kind: 'armor', name: 'Leather' }, { kind: 'weapon', name: 'Longbow' }, { kind: 'item', name: '20 arrows' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Longsword' }, { kind: 'shield' }] },
+        { grants: [{ kind: 'weapon', name: 'Longsword' }, { kind: 'weapon', name: 'Battleaxe' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Light Crossbow' }, { kind: 'item', name: '20 bolts' }] },
+        { grants: [{ kind: 'item', name: 'two handaxes' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Dungeoneer's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Explorer's Pack" }] },
+      ] },
     ],
     subclassLevel: 3,
     subclassName: 'Martial Archetype',
@@ -440,6 +524,17 @@ export const classes: readonly CharacterClass[] = [
       'dungeoneer-pack',
       '10 darts',
     ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Shortsword' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Dungeoneer's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Explorer's Pack" }] },
+      ] },
+      { fixed: [{ kind: 'item', name: '10 darts' }] },
+    ],
     subclassLevel: 3,
     subclassName: 'Monastic Tradition',
     spellcasting: null,
@@ -506,6 +601,21 @@ export const classes: readonly CharacterClass[] = [
       'chain mail',
       'holy symbol',
     ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Longsword' }, { kind: 'shield' }] },
+        { grants: [{ kind: 'weapon', name: 'Longsword' }, { kind: 'weapon', name: 'Battleaxe' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'item', name: 'five javelins' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Priest's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Explorer's Pack" }] },
+      ] },
+      { fixed: [{ kind: 'armor', name: 'Chain Mail' }, { kind: 'item', name: 'holy symbol' }] },
+    ],
     subclassLevel: 3,
     subclassName: 'Sacred Oath',
     spellcasting: {
@@ -571,6 +681,21 @@ export const classes: readonly CharacterClass[] = [
       'two shortswords',
       'dungeoneer-pack',
       'longbow and quiver of 20 arrows',
+    ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'armor', name: 'Scale Mail' }] },
+        { grants: [{ kind: 'armor', name: 'Leather' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'item', name: 'two shortswords' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Dungeoneer's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Explorer's Pack" }] },
+      ] },
+      { fixed: [{ kind: 'weapon', name: 'Longbow' }, { kind: 'item', name: '20 arrows' }] },
     ],
     subclassLevel: 3,
     subclassName: 'Ranger Archetype',
@@ -641,6 +766,22 @@ export const classes: readonly CharacterClass[] = [
       'two daggers',
       'thieves\' tools',
     ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Rapier' }] },
+        { grants: [{ kind: 'weapon', name: 'Shortsword' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Shortbow' }, { kind: 'item', name: '20 arrows' }] },
+        { grants: [{ kind: 'weapon', name: 'Shortsword' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Burglar's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Dungeoneer's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Explorer's Pack" }] },
+      ] },
+      { fixed: [{ kind: 'armor', name: 'Leather' }, { kind: 'item', name: 'two daggers' }, { kind: 'item', name: 'Thieves\' tools' }] },
+    ],
     subclassLevel: 3,
     subclassName: 'Roguish Archetype',
     // Spellcasting info for Arcane Trickster subclass
@@ -709,6 +850,21 @@ export const classes: readonly CharacterClass[] = [
       'dungeoneer-pack',
       'two daggers',
     ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Light Crossbow' }, { kind: 'item', name: '20 bolts' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'item', name: 'Component pouch' }] },
+        { grants: [{ kind: 'item', name: 'arcane focus' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Dungeoneer's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Explorer's Pack" }] },
+      ] },
+      { fixed: [{ kind: 'item', name: 'two daggers' }] },
+    ],
     subclassLevel: 1,
     subclassName: 'Sorcerous Origin',
     spellcasting: {
@@ -771,6 +927,21 @@ export const classes: readonly CharacterClass[] = [
       'simple weapon',
       'two daggers',
     ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Light Crossbow' }, { kind: 'item', name: '20 bolts' }] },
+        { grants: [{ kind: 'item', name: 'simple weapon' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'item', name: 'Component pouch' }] },
+        { grants: [{ kind: 'item', name: 'arcane focus' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Scholar's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Dungeoneer's Pack" }] },
+      ] },
+      { fixed: [{ kind: 'armor', name: 'Leather' }, { kind: 'item', name: 'simple weapon' }, { kind: 'item', name: 'two daggers' }] },
+    ],
     subclassLevel: 1,
     subclassName: 'Otherworldly Patron',
     spellcasting: {
@@ -832,6 +1003,21 @@ export const classes: readonly CharacterClass[] = [
       'component pouch',
       'scholar-pack',
       'spellbook',
+    ],
+    startingEquipmentChoices: [
+      { choose: [
+        { grants: [{ kind: 'weapon', name: 'Quarterstaff' }] },
+        { grants: [{ kind: 'weapon', name: 'Dagger' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'item', name: 'Component pouch' }] },
+        { grants: [{ kind: 'item', name: 'arcane focus' }] },
+      ] },
+      { choose: [
+        { grants: [{ kind: 'pack', name: "Scholar's Pack" }] },
+        { grants: [{ kind: 'pack', name: "Explorer's Pack" }] },
+      ] },
+      { fixed: [{ kind: 'item', name: 'Spellbook' }] },
     ],
     subclassLevel: 2,
     subclassName: 'Arcane Tradition',

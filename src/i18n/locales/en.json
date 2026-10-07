@@ -144,6 +144,8 @@
   },
   "equipment": {
     "title": "Equipment",
+    "startingEquipment": "Starting Equipment",
+    "chooseOne": "Choose one",
     "startingPack": "Starting Pack",
     "manual": "Manual Selection",
     "weapons": "Weapons",

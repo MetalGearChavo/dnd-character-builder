@@ -208,6 +208,15 @@ headings as well as on the next record. Then check the result mechanically: no
 entry may start lowercase, end without punctuation, contain a run of digits, or
 carry the running footer.
 
+### UI changes don't need a live browser pass
+
+For this project, `npm run test` (co-located `*.test.ts` component tests) plus
+`npx vue-tsc --noEmit -p tsconfig.app.json` is sufficient verification for a UI
+change. Do not spin up the dev server and drive the app end-to-end with a real
+or scripted browser (Playwright, etc.) just to confirm a feature works —
+write or extend a component test instead. This overrides the general
+instinct to "use the feature in a browser before reporting complete."
+
 ### Browser verification
 
 Screenshots of content below the fold often fail to composite in the preview

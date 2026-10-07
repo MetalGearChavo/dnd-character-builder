@@ -3368,6 +3368,7 @@ export const equipmentNamesIt: Record<string, string> = {
   // ── Dotazione iniziale delle classi: descrizioni in minuscolo che nessuna
   // tabella copriva.
   'druidic focus': 'focus druidico',
+  'arcane focus': 'focus arcano',
   'holy symbol': 'simbolo sacro',
   'simple weapon': 'un\'arma semplice',
   'martial weapon and shield': 'un\'arma da guerra e uno scudo',
@@ -3706,6 +3707,7 @@ export const equipmentNamesEs: Record<string, string> = {
   '15 gp': '15 po',
   // ── Equipo inicial de clase
   'druidic focus': 'foco druídico',
+  'arcane focus': 'foco arcano',
   'holy symbol': 'símbolo sagrado',
   'simple weapon': 'un arma sencilla',
   'martial weapon and shield': 'un arma marcial y un escudo',
